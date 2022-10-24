@@ -15,7 +15,8 @@ def get_args():
     parser.add_argument("--time-steps", type=int, default=96, help="number of time steps")
     # parser.add_argument("--num-adversaries", type=int, default=1, help="number of adversaries")
     # Core training parameters
-    parser.add_argument("--hiden_layer", type=int, default=128, help="hidden layer dim")
+    parser.add_argument("--hiden_layer", type=int, default=256, help="hidden layer dim")
+    parser.add_argument("--hiden_layer_num", type=int, default=2, help="hidden layer number")
     parser.add_argument("--lr-actor", type=float, default=1e-5, help="learning rate of actor")
     parser.add_argument("--lr-critic", type=float, default=1e-4, help="learning rate of critic")
     parser.add_argument("--epsilon", type=float, default=0.1, help="epsilon greedy")
