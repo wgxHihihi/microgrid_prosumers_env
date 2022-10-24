@@ -1,0 +1,7 @@
+bess:
+  # BESS
+  p_max: 10
+  soc_min: 0.3
+  soc_max: 1.0
+  deg_cost: 0.1
+  e_max: 25

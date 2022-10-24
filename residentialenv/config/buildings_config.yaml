@@ -1,0 +1,54 @@
+building1:
+  # has no PV
+  # ESS
+  soc_ini: 0.0
+  ess_p_max: 2.4
+  soc_max: 1.0
+  soc_min: 0.0
+  ess_e_max: 10
+  # Nonshiftable Apps
+  data_path: "/residentialenv/training_data/building_data/noPV/home5746.csv"
+
+building2:
+  # has no PV
+  # ESS
+  soc_ini: 0.0
+  ess_p_max: 2.4
+  soc_max: 1.0
+  soc_min: 0.0
+  ess_e_max: 12
+  # Nonshiftable Apps
+  data_path: "/residentialenv/training_data/building_data/noPV/home7901.csv"
+
+building3:
+  # has no PV
+  # EV
+  soc_ini: 0.0
+  ess_p_max: 2.4
+  soc_max: 1.0
+  soc_min: 0.0
+  ess_e_max: 6
+  # Nonshiftable Apps
+  data_path: "/residentialenv/training_data/building_data/noPV/home7951.csv"
+
+building4:
+  # has PV
+  # EV
+  soc_ini: 0.0
+  ess_p_max: 2.4
+  soc_max: 1.0
+  soc_min: 0.0
+  ess_e_max: 8
+  # Nonshiftable Apps
+  data_path: "/residentialenv/training_data/building_data/hasPV/home1642.csv"
+
+building5:
+  # has PV
+  # ESS
+  soc_ini: 0.0
+  ess_p_max: 2.4
+  soc_max: 1.0
+  soc_min: 0.0
+  ess_e_max: 9
+  # Nonshiftable Apps
+  data_path: "/residentialenv/training_data/building_data/hasPV/home2335.csv"

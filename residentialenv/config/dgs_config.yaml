@@ -1,0 +1,7 @@
+dg1:
+  # ref: Intelligent Multi-Microgrid Energy Management Based on Deep Neural Network and Model-Free Reinforcement Learning
+  p_max: 10
+  T_dg: 0.33
+  lam_1: 0.00104
+  lam_2: 0.0304
+  lam_3: 1.3
