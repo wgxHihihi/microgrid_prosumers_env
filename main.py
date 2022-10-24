@@ -7,8 +7,9 @@ import os
 
 if __name__ == '__main__':
     # get the params
-    seed = random.randint(13, 50)
+
     for _ in range(2):
+        seed = random.randint(13, 50)
         args = get_args()
         args.seed = seed
         project_path = os.path.dirname(os.path.abspath(__file__))
