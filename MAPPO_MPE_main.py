@@ -1,3 +1,5 @@
+import random
+
 import pandas as pd
 import torch
 import numpy as np
@@ -41,9 +43,9 @@ class Runner_MAPPO:
 
         # Create a tensorboard
         self.writer = SummaryWriter(
-            log_dir='runs/MAPPO/MAPPO_env_{}_number_{}_seed_{}'.format('microgrid', 7, self.seed))
+            log_dir='runs/MAPPO/MAPPO_env_{}_number_{}_seed_{}'.format('microgrid', self.env.n_agents, self.seed))
 
-        self.log_path = './train_logs/result_ippo22/'
+        self.log_path = './train_logs/ippo/result_%d/' % self.seed
         # record path
         if not os.path.exists(self.log_path + 'record/'):
             os.makedirs(self.log_path + 'record/')
@@ -74,7 +76,7 @@ class Runner_MAPPO:
         is_record = False
         for ep in tqdm(range(self.args.max_train_steps)):
             buffer_rewards = []
-            buffer_rewards_dis = np.zeros(self.agent_num+2)
+            buffer_rewards_dis = np.zeros(self.agent_num + 2)
             total_steps = 0
             if (ep + 1) % self.log_every == 0:
                 is_record = True
@@ -131,7 +133,7 @@ class Runner_MAPPO:
     def run_episode(self, evaluate=False, is_record=False):
         record = []
         episode_reward = 0
-        ep_reward_dis = np.zeros(self.agent_num+2)
+        ep_reward_dis = np.zeros(self.agent_num + 2)
         self.env.day_index = 1
         obs_n, _, info = self.env.reset()
         if is_record:
@@ -259,5 +261,7 @@ if __name__ == '__main__':
     parser.add_argument("--use_value_clip", type=float, default=False, help="Whether to use value clip.")
 
     args = parser.parse_args()
-    runner = Runner_MAPPO(args, seed=12)
-    runner.run()
+    for i in range(2):
+        seed = random.randint(13, 50)
+        runner = Runner_MAPPO(args, seed=seed)
+        runner.run()
