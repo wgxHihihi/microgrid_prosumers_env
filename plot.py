@@ -33,21 +33,18 @@ def reward(path):
     plt.show()
 
 
-mappo_path1 = './data/mappo/result4/record/r_3000.csv'
-mappo_path2 = './data/mappo/result5/record/r_3000.csv'
+project_dir = os.path.dirname(os.path.abspath(__file__))
+print(project_dir)
+mappo_path1 = project_dir + '/train_log/result_mappo12/record/r_5000.csv'
+mappo_path2 = project_dir + '/train_log/result_mappo13/record/r_5000.csv'
 ippo_path1 = './data/ippo/result9/record/r_3000.csv'
 ippo_path2 = './data/ippo/result10/record/r_3000.csv'
 maddpg_path1 = './data/maddpg/result2/record/r_3000.csv'
 maddpg_path2 = './data/maddpg/result3/record/r_3000.csv'
 
-paths = [['./data/mappo/result4/record/r_4500.csv', './data/mappo/result5/record/r_4500.csv',
-          './data/mappo/result1/record/r_4500.csv', './data/mappo/result6/record/r_4500.csv'],
-         ['./data/ippo/result9/record/r_4500.csv', './data/ippo/result10/record/r_4500.csv'],
-         ['./data/maddpg/result2/record/r_ep4500.csv', './data/maddpg/result3/record/r_ep4500.csv',
-          './data/maddpg/result1/record/r_ep4500.csv']]
+paths = [[mappo_path1, mappo_path2]]
 
 path = os.path.abspath(__file__)
-
 
 label = ['The proposed', 'IPPO', 'MADDPG']
 
@@ -72,18 +69,19 @@ for i in range(len(paths)):
         data = pd.read_csv(paths[i][j]).round(2)
         data = data[['Unnamed: 0', 'total']]
         # print (smooth(data['total'],9))
-        data['total'] = smooth(data['total'], 19)[0]
+        # data['total'] = smooth(data['total'], 19)[0]
         data['algo'] = label[i]
         data.rename(columns={'Unnamed: 0': 'Episodes', 'total': 'Rewards'}, inplace=True)
         alg_df.append(data)
-    alg_df = pd.concat(alg_df)
+    alg_df = pd.concat(alg_df, ignore_index=True)
     df.append(alg_df)
     # print(pd.concat(alg_df))
-df = pd.concat(df)
+df = pd.concat(df, ignore_index=True)
 # df = smooth(df, 9)
 print(df)
 
-sns.lineplot(x="Episodes", y="Rewards", hue="algo", style="algo", data=df)
+# sns.lineplot(x="Episodes", y="Rewards", hue="algo", style="algo", data=df)
+sns.lineplot(x="Episodes", y="Rewards", data=df)
 plt.show()
 # def get_data():
 #     '''获取数据
