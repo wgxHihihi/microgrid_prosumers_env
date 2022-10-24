@@ -28,7 +28,7 @@ class MADDPG:
 
         # create the dict for store the model
         if not os.path.exists(self.args.save_dir):
-            os.mkdir(self.args.save_dir)
+            os.makedirs(self.args.save_dir)
         # path to save the model
         self.model_path = self.args.save_dir + '/' + self.args.scenario_name
         if not os.path.exists(self.model_path):
