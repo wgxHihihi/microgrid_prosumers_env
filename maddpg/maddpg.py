@@ -110,7 +110,8 @@ class MADDPG:
         # self.ac_optim.zero_grad()
         # loss.backward()
         # self.ac_optim.step()
-        self._soft_update_target_network()
+        if self.train_step % 10 == 0:
+            self._soft_update_target_network()
 
         self.train_step += 1
 

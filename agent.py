@@ -16,12 +16,13 @@ class Agent:
             ori_u = 2
         else:
             inputs = torch.tensor(o, dtype=torch.float32).unsqueeze(0)
-            pi = self.policy.actor_network(inputs, is_train=False).squeeze(0)
+            with torch.no_grad():
+                pi = self.policy.actor_network(inputs, is_train=False).squeeze(0)
             ori_u = copy.deepcopy(pi)
             u = pi.cpu().numpy()
+            # print(pi)
             noise = noise_rate * self.args.high_action * np.random.randn(
                 self.args.action_shape[self.agent_id])  # gaussian noise
-            # ori_u = u
             u += noise
             u = np.clip(u, -self.args.high_action, self.args.high_action)
         return u, ori_u

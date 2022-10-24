@@ -69,7 +69,7 @@ class Runner:
                     building_state = np.stack(s[:self.env.building_num])
                     soc = building_state[:, 0]
                     price = [self.env.local_buy, self.env.local_sold, self.env.net_buy, self.env.net_sell]
-                    rtp = [self.env.tou_buy[ep + self.env.time_bias]]
+                    rtp = [self.env.tou_buy[t + self.env.time_bias]]
                     outdoor_temp = [building_state[0, 3]]
                     action_pre = self.env.action_pre
                     p_demand_generated = [self.env.p_demand, self.env.p_generated,

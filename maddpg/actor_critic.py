@@ -28,9 +28,9 @@ class Actor(nn.Module):
         orthogonal_init(self.action_out)
 
     def forward(self, x, is_train=True):
-        x = torch.relu(self.fc1(x))
+        x = torch.tanh(self.fc1(x))
         for lay in self.hidden_layer:
-            x = torch.relu(lay(x))
+            x = torch.tanh(lay(x))
         actions = torch.tanh(self.action_out(x))
         return actions
 
