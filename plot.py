@@ -8,16 +8,6 @@ import os
 sns.set()
 
 
-# def smooth(data, sm=2):
-#     if sm >= 1:
-#         smooth_data = []
-#         for d in data:
-#             y = np.ones(sm) * 1.0 / sm
-#             d = np.convolve(y, d, "same")
-#             smooth_data.append(d)
-#     return smooth_data
-
-
 def reward(path):
     reward_data = pd.read_csv(path)
     sns.lineplot(x='index', y='total', data=reward_data, alpha=0.5)
@@ -33,22 +23,6 @@ def reward(path):
     plt.show()
 
 
-project_dir = os.path.dirname(os.path.abspath(__file__))
-print(project_dir)
-mappo_path1 = project_dir + '/train_log/result_mappo12/record/r_5000.csv'
-mappo_path2 = project_dir + '/train_log/result_mappo13/record/r_5000.csv'
-ippo_path1 = './data/ippo/result9/record/r_3000.csv'
-ippo_path2 = './data/ippo/result10/record/r_3000.csv'
-maddpg_path1 = './data/maddpg/result2/record/r_3000.csv'
-maddpg_path2 = './data/maddpg/result3/record/r_3000.csv'
-
-paths = [[mappo_path1, mappo_path2]]
-
-path = os.path.abspath(__file__)
-
-label = ['The proposed', 'IPPO', 'MADDPG']
-
-
 def smooth(data, sm=1):
     smooth_data = []
     if sm > 1:
@@ -59,49 +33,40 @@ def smooth(data, sm=1):
     return smooth_data
 
 
-# npy = np.load('./data/ippo/TD3_Ant-v1_0.npy')
-# print(npy)
+def rewards_plot():
+    df = []
+    for i in range(len(paths)):
+        alg_df = []
+        for j in range(len(paths[i])):
+            data = pd.read_csv(paths[i][j]).round(2)
+            data = data[['Unnamed: 0', 'total']]
+            # print (smooth(data['total'],9))
+            data['total'] = smooth(data['total'], 19)[0]
+            data['algo'] = label[i]
+            data.rename(columns={'Unnamed: 0': 'Episodes', 'total': 'Rewards'}, inplace=True)
+            alg_df.append(data)
+        alg_df = pd.concat(alg_df, ignore_index=True)
+        df.append(alg_df)
 
-df = []
-for i in range(len(paths)):
-    alg_df = []
-    for j in range(len(paths[i])):
-        data = pd.read_csv(paths[i][j]).round(2)
-        data = data[['Unnamed: 0', 'total']]
-        # print (smooth(data['total'],9))
-        # data['total'] = smooth(data['total'], 19)[0]
-        data['algo'] = label[i]
-        data.rename(columns={'Unnamed: 0': 'Episodes', 'total': 'Rewards'}, inplace=True)
-        alg_df.append(data)
-    alg_df = pd.concat(alg_df, ignore_index=True)
-    df.append(alg_df)
-    # print(pd.concat(alg_df))
-df = pd.concat(df, ignore_index=True)
-# df = smooth(df, 9)
-print(df)
+    df = pd.concat(df, ignore_index=True)
 
-# sns.lineplot(x="Episodes", y="Rewards", hue="algo", style="algo", data=df)
-sns.lineplot(x="Episodes", y="Rewards", data=df)
-plt.show()
-# def get_data():
-#     '''获取数据
-#     '''
-#     basecond = np.array([[18, 20, 19, 18, 13, 4, 1], [20, 17, 12, 9, 3, 0, 0], [20, 20, 20, 12, 5, 3, 0]])
-#     cond1 = np.array([[18, 19, 18, 19, 20, 15, 14], [19, 20, 18, 16, 20, 15, 9], [19, 20, 20, 20, 17, 10, 0]])
-#     cond2 = np.array([[20, 20, 20, 20, 19, 17, 4], [20, 20, 20, 20, 20, 19, 7], [19, 20, 20, 19, 19, 15, 2]])
-#     cond3 = np.array([[20, 20, 20, 20, 19, 17, 12], [18, 20, 19, 18, 13, 4, 1], [20, 19, 18, 17, 13, 2, 0]])
-#     return basecond, cond1, cond2, cond3
-#
-#
-# data = get_data()
-# print(data)
-# label = ['algo1', 'algo2', 'algo3', 'algo4']
-# df = []
-# for i in range(len(data)):
-#     df.append(pd.DataFrame(data[i]).melt(var_name='episode', value_name='loss'))
-#     df[i]['algo'] = label[i]
-# df = pd.concat(df)  # 合并
-# print(df)
-# sns.lineplot(x="episode", y="loss", hue="algo", style="algo", data=df)
-# plt.title("some loss")
-# plt.show()
+    sns.lineplot(x="Episodes", y="Rewards", hue="algo", style="algo", data=df)
+    plt.show()
+
+
+if __name__ == '__main__':
+    project_dir = os.path.dirname(os.path.abspath(__file__))
+    mappo_path1 = project_dir + '/train_log/result_mappo12/record/r_5000.csv'
+    mappo_path2 = project_dir + '/train_log/result_ippo22/record/r_5000.csv'
+    ippo_path1 = './data/ippo/result9/record/r_3000.csv'
+    ippo_path2 = './data/ippo/result10/record/r_3000.csv'
+    maddpg_path1 = './data/maddpg/result2/record/r_3000.csv'
+    maddpg_path2 = './data/maddpg/result3/record/r_3000.csv'
+
+    paths = [[mappo_path1, mappo_path2]]
+
+    path = os.path.abspath(__file__)
+
+    label = ['The proposed', 'IPPO', 'MADDPG']
+
+    rewards_plot()
