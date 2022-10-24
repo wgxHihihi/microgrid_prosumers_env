@@ -43,7 +43,7 @@ class Runner_MAPPO:
         self.writer = SummaryWriter(
             log_dir='runs/MAPPO/MAPPO_env_{}_number_{}_seed_{}'.format('microgrid', 7, self.seed))
 
-        self.log_path = './train_logs/result12/'
+        self.log_path = './train_logs/result_mappo12/'
         # record path
         if not os.path.exists(self.log_path + 'record/'):
             os.makedirs(self.log_path + 'record/')
