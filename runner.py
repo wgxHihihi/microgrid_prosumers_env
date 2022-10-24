@@ -20,7 +20,7 @@ class Runner:
         self.buffer = Buffer(args)
         np.random.seed(args.seed)
         torch.manual_seed(args.seed)
-        self.log_every = 1
+        self.log_every = 100
         self.train_every = 8
 
         self.save_path = self.args.save_dir + '/' + self.args.scenario_name
@@ -35,6 +35,8 @@ class Runner:
         for i in range(self.args.n_agents):
             agent = Agent(i, self.args)
             agents.append(agent)
+        print('hidden_layer_num: %d' % self.args.hiden_layer_num)
+        print('hidden_layer_dim: %d' % self.args.hiden_layer)
         return agents
 
     def run(self):
