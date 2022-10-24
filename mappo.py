@@ -154,7 +154,7 @@ class MAPPO:
             self.critic = Critic_RNN(args, sum(self.critic_input_dim))
         else:
             self.actor = Actor_MLP(args, self.agent_id, self.actor_input_dim)
-            self.critic = Critic_MLP(args, sum(self.critic_input_dim))
+            self.critic = Critic_MLP(args, self.critic_input_dim[self.agent_id])
 
         self.ac_parameters = list(self.actor.parameters()) + list(self.critic.parameters())
         if self.set_adam_eps:
@@ -294,7 +294,7 @@ class MAPPO:
     def get_inputs(self, batch):
         actor_inputs, critic_inputs = [], []
         actor_inputs.append(batch['obs_%d' % self.agent_id])
-        critic_inputs.append(batch['s'])
+        critic_inputs.append(batch['obs_%d' % self.agent_id])
         # print(critic_inputs)
 
         # if self.add_agent_id:

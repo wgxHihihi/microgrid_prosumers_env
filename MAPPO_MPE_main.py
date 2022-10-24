@@ -43,7 +43,7 @@ class Runner_MAPPO:
         self.writer = SummaryWriter(
             log_dir='runs/MAPPO/MAPPO_env_{}_number_{}_seed_{}'.format('microgrid', 7, self.seed))
 
-        self.log_path = './train_logs/result12/'
+        self.log_path = './train_logs/result22/'
         # record path
         if not os.path.exists(self.log_path + 'record/'):
             os.makedirs(self.log_path + 'record/')
@@ -154,7 +154,7 @@ class Runner_MAPPO:
             # print(obs_n)
             for i in range(self.agent_num):
                 a_i, a_logprob_i = self.agents[i].choose_action(obs_n[i], evaluate=evaluate)
-                v_n = self.agents[i].get_value(s)
+                v_n = self.agents[i].get_value(obs_n[i])
                 if (np.isnan(a_i[0])):
                     print('a[{}][{}] is nan!'.format(i, 0))
                 if (np.isnan(all(obs_n[i]))):
@@ -216,7 +216,7 @@ class Runner_MAPPO:
             # s = np.hstack(obs_n).flatten()
             v = []
             for i in range(self.agent_num):
-                v_n = self.agents[i].get_value(s)
+                v_n = self.agents[i].get_value(obs_n[i])
                 v.append(v_n)
             self.replay_buffer.store_last_value(episode_step + 1, v)
 
