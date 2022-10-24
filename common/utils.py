@@ -39,7 +39,7 @@ def make_env(args):
     # env = MultiAgentEnv(world)
     args.n_agents = env.n_agents
     args.obs_shape = env.obs_space  # 每一维代表该agent的obs维度
-    args.action_shape = env.action_space  # 每一维代表该agent的act维度
+    args.action_shape = env.act_space  # 每一维代表该agent的act维度
     args.high_action = 1
     args.low_action = -1
     return env, args
