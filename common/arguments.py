@@ -11,7 +11,7 @@ def get_args():
     # Environment
     parser.add_argument("--seed", type=int, default=2, help="seed")
     parser.add_argument("--scenario-name", type=str, default="model", help="name of the scenario script")
-    parser.add_argument("--max-episode-len", type=int, default=4500, help="maximum episode length")
+    parser.add_argument("--max-episode-len", type=int, default=5000, help="maximum episode length")
     parser.add_argument("--time-steps", type=int, default=96, help="number of time steps")
     # parser.add_argument("--num-adversaries", type=int, default=1, help="number of adversaries")
     # Core training parameters
