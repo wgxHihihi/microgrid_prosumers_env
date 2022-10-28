@@ -25,7 +25,7 @@ def get_args():
     parser.add_argument("--buffer-size", type=int, default=int(5e5), help="number of transitions can be stored in buffer")
     parser.add_argument("--batch-size", type=int, default=256, help="number of episodes to optimize at the same time")
     # Checkpointing
-    parser.add_argument("--save-dir", type=str, default="./train_logs/maddpg/result", help="directory in which training state and model should be saved")
+    parser.add_argument("--save-dir", type=str, default="./train_logs/maddpg_state_limit/result", help="directory in which training state and model should be saved")
     parser.add_argument("--save-rate", type=int, default=2000, help="save model once every time this many episodes are completed")
     parser.add_argument("--model-dir", type=str, default="", help="directory in which training state and model are loaded")
 
