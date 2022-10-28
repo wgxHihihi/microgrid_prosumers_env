@@ -9,7 +9,7 @@ from normalization import Normalization, RewardScaling
 from replay_buffer import ReplayBuffer
 from mappo import MAPPO
 # from make_env import make_env
-from residentialenv.microgrid import microgrid
+from residentialenv.env_adapter import env_adapter
 import math
 import os
 from tqdm import tqdm
@@ -24,19 +24,19 @@ class Runner_MAPPO:
         np.random.seed(self.seed)
         torch.manual_seed(self.seed)
         # Create env
-        self.env = microgrid(self.seed)
+        self.env = env_adapter(self.seed)
         self.args.N = self.env.n_agents  # The number of agents
-        self.args.obs_dim_n = self.env.obs_space  # obs dimensions of N agents
-        self.args.action_dim_n = self.env.act_space  # actions dimensions of N agents
+        self.args.obs_dim_n = self.env.obs_shape  # obs dimensions of N agents
+        self.args.action_dim_n = self.env.action_shape  # actions dimensions of N agents
         self.args.episode_limit = 96
 
         # Create N agents
         self.agents = self._init_agents()
         self.agent_num = self.env.n_agents
 
-        print("observation_space=", self.env.obs_space)
+        print("observation_space=", self.env.obs_shape)
         print("obs_dim_n={}".format(self.args.obs_dim_n))
-        print("action_space=", self.env.action_space)
+        print("action_space=", self.env.action_shape)
         print("action_dim_n={}".format(self.args.action_dim_n))
 
         self.replay_buffer = ReplayBuffer(self.args)
@@ -45,7 +45,7 @@ class Runner_MAPPO:
         self.writer = SummaryWriter(
             log_dir='runs/MAPPO/MAPPO_env_{}_number_{}_seed_{}'.format('microgrid', self.env.n_agents, self.seed))
 
-        self.log_path = './train_logs/mappo/result_%d/' % self.seed
+        self.log_path = './train_logs/mappo_state_limit/result_%d/' % self.seed
         # record path
         if not os.path.exists(self.log_path + 'record/'):
             os.makedirs(self.log_path + 'record/')
@@ -135,9 +135,9 @@ class Runner_MAPPO:
         episode_reward = 0
         ep_reward_dis = np.zeros(self.agent_num + 2)
         self.env.day_index = 1
-        obs_n, _, info = self.env.reset()
+        obs_n, info = self.env.reset()
         if is_record:
-            date = ''.join(self.env.date[self.env.day_index * 96].split(' ')[0].split('/'))
+            date = ''.join(self.env.env.date[self.env.day_index * 96].split(' ')[0].split('/'))
         else:
             date = None
 
@@ -169,35 +169,35 @@ class Runner_MAPPO:
                 values.append(v_n)
             # print(actions)
             if is_record:
-                building_state = np.stack(obs_n[:self.env.building_num])
+                building_state = np.stack(obs_n[:self.env.env.building_num])
                 # print(building_state)
                 # temp = building_state[:, 0]
                 soc = building_state[:, 0]
-                price = [self.env.local_buy, self.env.local_sold, self.env.net_buy, self.env.net_sell]
+                price = [self.env.env.local_buy, self.env.env.local_sold, self.env.env.net_buy, self.env.env.net_sell]
                 # print(s[self.env.building_num])
                 # p_g = [obs_n[self.env.building_num][0]]
                 # # print(p_g)
                 # bess_soc = [obs_n[-1][0]]
-                rtp = [self.env.tou_buy[episode_step + self.env.time_bias]]
+                rtp = [self.env.env.tou_buy[episode_step + self.env.env.time_bias]]
                 outdoor_temp = [building_state[0, 3]]
-                action_pre = self.env.action_pre
-                p_demand_generated = [self.env.p_demand, self.env.p_generated, self.env.p_demand - self.env.p_generated]
+                action_pre = self.env.env.action_pre
+                p_demand_generated = [self.env.env.p_demand, self.env.env.p_generated,
+                                      self.env.env.p_demand - self.env.env.p_generated]
                 p_buildings = building_state[:, 2]
                 p_fixed = building_state[:, 1]
                 net_cost = [info['net_cost']]
                 # print(p_buildings)
                 record.append(np.hstack(
                     (
-                        self.env.time, outdoor_temp, p_buildings, p_fixed, soc, price, rtp,
+                        self.env.env.time, outdoor_temp, p_buildings, p_fixed, soc, price, rtp,
                         np.hstack(actions), action_pre, p_demand_generated, net_cost)))
                 # print(record)
 
-            obs_next_n, _, r_n, done_n, info, _ = self.env.step(actions)
-            episode_reward += sum(r_n) + sum(info.values())
-            ep_reward_dis += r_n + list(info.values())
+            obs_next_n,  r_n, done_n, info, r_dis = self.env.step(actions)
+            episode_reward += r_n[0]
+            ep_reward_dis += r_dis + list(info.values())
             # print(r_n)
             # r_n = [sum(r_n)] * self.env.n_agents
-            r_n = self.reward_refactor(r_n, info)
             # print(r_n)
             if self.args.use_reward_norm:
                 r_n = self.reward_norm(r_n)
