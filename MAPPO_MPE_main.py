@@ -45,7 +45,7 @@ class Runner_MAPPO:
         self.writer = SummaryWriter(
             log_dir='runs/MAPPO/MAPPO_env_{}_number_{}_seed_{}'.format('microgrid', self.env.n_agents, self.seed))
 
-        self.log_path = './train_logs/ippo/result_%d/' % self.seed
+        self.log_path = './train_logs/ippo_state_limit/result_%d/' % self.seed
         # record path
         if not os.path.exists(self.log_path + 'record/'):
             os.makedirs(self.log_path + 'record/')
