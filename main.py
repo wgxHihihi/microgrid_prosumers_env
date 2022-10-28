@@ -3,22 +3,20 @@ from common.arguments import get_args
 from common.utils import make_env
 import numpy as np
 import random
-import os
+import torch
 
 if __name__ == '__main__':
     # get the params
-
-    for _ in range(2):
-        seed = random.randint(13, 50)
-        args = get_args()
+    args = get_args()
+    save_dir = args.save_dir
+    for i in range(3):
+        seed = random.randint(2235, 2255)
         args.seed = seed
-        project_path = os.path.dirname(os.path.abspath(__file__))
-        args.save_dir = project_path + args.save_dir + str(args.seed)
-        print('seed: %d' % seed)
-        print('train logged in dir: %s' % args.save_dir)
         env, args = make_env(args)
-        print('env agents count: %s' % env.n_agents)
-        print('env obs space: %s' % env.obs_space)
-        print('env act space: %s' % env.act_space)
+        args.save_dir = save_dir + str(args.seed)
         runner = Runner(args, env)
-        runner.run()
+        if args.evaluate:
+            returns = runner.evaluate()
+            print('Average returns is', returns)
+        else:
+            runner.run()

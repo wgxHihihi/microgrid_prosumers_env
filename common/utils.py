@@ -31,15 +31,13 @@ def store_args(method):
 
 
 def make_env(args):
-    from residentialenv.microgrid import microgrid
-    env = microgrid(args.seed)
+    from residentialenv.env_adapter import env_adapter
 
-    # create multiagent environment
-
-    # env = MultiAgentEnv(world)
-    args.n_agents = env.n_agents
-    args.obs_shape = env.obs_space  # 每一维代表该agent的obs维度
-    args.action_shape = env.act_space  # 每一维代表该agent的act维度
+    env = env_adapter(args.seed)
+    args.n_players = env.n_players
+    args.n_agents = env.n_agents  # 需要操控的玩家个数，虽然敌人也可以控制，但是双方都学习的话需要不同的算法
+    args.obs_shape = env.obs_shape  # 每一维代表该agent的obs维度
+    args.action_shape = env.action_shape  # 每一维代表该agent的act维度
     args.high_action = 1
     args.low_action = -1
     return env, args
