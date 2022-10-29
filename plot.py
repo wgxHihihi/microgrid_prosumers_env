@@ -94,12 +94,16 @@ if __name__ == '__main__':
     project_dir = os.path.dirname(os.path.abspath(__file__))
     logs_dirs = {'mappo': project_dir + r'\train_logs\mappo',
                  'ippo': project_dir + r'\train_logs\ippo',
-                 'maddpg': project_dir + r'\train_logs\maddpg'
+                 'maddpg': project_dir + r'\train_logs\maddpg',
+                 'mappo-sl': project_dir + r'\train_logs\mappo_state_limit',
+                 'ippo-sl': project_dir + r'\train_logs\ippo_state_limit',
+                 'maddpg-sl': project_dir + r'\train_logs\maddpg_state_limit'
                  }
     ep = 5000
     # colors = {'mappo': 'red', 'ippo': 'blue', 'maddpg': 'green'}
     file_paths = get_files_paths(logs_dirs, 'r_(.*){}\.csv'.format(ep))
     # rewards_plot(file_paths)
+    print(file_paths)
     mean_r_smooth = get_mean_reward(file_paths, 31)
     mean_r = get_mean_reward(file_paths, 0)
     plot_df(mean_r_smooth, mean_r, True)
