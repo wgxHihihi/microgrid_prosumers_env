@@ -40,23 +40,35 @@ def get_mean_reward(paths, smooth_range):
     return df
 
 
-def plot_df(df_smooth: dict, df: dict, is_smooth: bool):
-    fig = plt.figure(figsize=(8, 5))
-    colors = {}
-    for algo, data in df_smooth.items():
-        total_r = data[:, 0, 0]
-        a = plt.plot(range(len(total_r)), list(total_r), label=algo)
-        colors[algo] = a[0]._color
-    if is_smooth:
-        for algo, data in df.items():
+def plot_reward_figs():
+    file_paths = get_files_paths(logs_dirs, 'r_(.*){}\.csv'.format(ep))
+    df_smooth = get_mean_reward(file_paths, 31)
+    df_origin = get_mean_reward(file_paths, 0)
+
+    def plot_df(df_s: dict, df: dict, is_smooth: bool, fig_num: int, legend: bool):
+        plt.figure(fig_num, figsize=(8, 5))
+        colors = {}
+        for algo, data in df_s.items():
             total_r = data[:, 0, 0]
-            # print(len(total_r))
-            plt.plot(range(len(total_r)), list(total_r), color=colors[algo], linewidth=2, alpha=0.5)
-    plt.legend(fontsize=indexsize)
-    plt.xticks(fontsize=indexsize)
-    plt.xlim(0, 5000)
-    plt.ylabel('Rewards', fontsize=fontsize)
-    plt.xlabel('Episodes', fontsize=fontsize)
+            a = plt.plot(range(len(total_r)), list(total_r), label=algo, linewidth=linewidth_1)
+            colors[algo] = a[0]._color
+        if is_smooth:
+            for algo, data in df.items():
+                total_r = data[:, 0, 0]
+                # print(len(total_r))
+                plt.plot(range(len(total_r)), list(total_r), color=colors[algo], linewidth=linewidth_2, alpha=0.5)
+        if legend:
+            plt.legend(fontsize=indexsize)
+        plt.tick_params(labelsize=indexsize)
+        plt.xlim(0, 5000)
+        plt.ylabel('Rewards', fontsize=fontsize)
+        plt.xlabel('Episodes', fontsize=fontsize)
+
+    # proposed reward
+    proposed_dict_s, proposed_dict = {'mappo': df_smooth['mappo']}, {'mappo': df_origin['mappo']}
+    plot_df(proposed_dict_s, proposed_dict, is_smooth=True, fig_num=1, legend=False)
+    # comparison rewards
+    plot_df(df_smooth, df_origin, is_smooth=True, fig_num=2, legend=True)
     plt.show()
 
 
@@ -72,33 +84,13 @@ def plot_load():
     for key, path in dirs.items():
         data = pd.read_csv(path)
         grid_data = data['grid'][day_index * 96:(day_index + 1) * 96]
-        plt.plot(range(len(grid_data)), grid_data, label=key)
+        plt.plot(range(len(grid_data)), grid_data, label=key, linewidth=linewidth_1)
     plt.legend(fontsize=indexsize)
     plt.xlabel('time (H)', fontsize=fontsize)
     plt.xlim(0, 96)
     plt.xticks(range(0, 97, 8), labels=time_labels, fontsize=indexsize)
+    plt.tick_params(labelsize=indexsize)
     plt.ylabel('Power (kW)', fontsize=fontsize)
-    plt.show()
-
-
-def rewards_plot(paths):
-    df = []
-    for algo, files in paths.items():
-        alg_df = []
-        for file in files:
-            data = pd.read_csv(file).round(2)
-            data = data[['Unnamed: 0', 'total']]
-            data['total'] = smooth(data['total'], 19)[0]
-            data['algo'] = algo
-            data.rename(columns={'Unnamed: 0': 'Episodes', 'total': 'Rewards'}, inplace=True)
-            alg_df.append(data)
-        alg_df = pd.concat(alg_df, ignore_index=True)
-        df.append(alg_df)
-
-    df = pd.concat(df, ignore_index=True)
-    print(df)
-    sns.lineplot(x="Episodes", y="Rewards", hue="algo", style="algo", data=df)
-    plt.xlim(0, ep)
     plt.show()
 
 
@@ -115,6 +107,47 @@ def get_files_paths(train_logs_dirs, patten):
     return paths
 
 
+def plot_record():
+    best_res_paths = get_beat_result(logs_dirs)
+
+    def plot_after_scheduling(path):
+        data = pd.read_csv(path)
+        p_net = data['p_net']
+        tou = data['rtp']
+        plt.figure(figsize=[8, 5])
+        plt.plot(range(len(p_net)), p_net, linewidth=linewidth_1, label='P_net')
+        plt.plot(range(len(tou)), tou, linewidth=linewidth_1, label='rtp')
+        plt.legend(fontsize=indexsize)
+        plt.xticks(time_index, time_labels)
+        plt.tick_params(labelsize=indexsize)
+        plt.xlim(0, 96)
+        plt.xlabel('time (H)', fontsize=fontsize)
+        plt.ylabel('power (kW)', fontsize=fontsize)
+
+    plot_after_scheduling(best_res_paths['mappo'])
+    plt.show()
+
+
+def get_beat_result(train_logs_dirs):
+    record_paths = {}
+    r_path = get_files_paths(train_logs_dirs, 'r_(.*){}\.csv'.format(ep))
+
+    for key, paths in r_path.items():
+        last_rewards = {}
+        for path in paths:
+            last_reward = pd.read_csv(path).iloc[-1, 1]
+            last_rewards[path] = last_reward
+
+        best_res_path = max(last_rewards, key=lambda x: last_rewards[x])
+        # find out the best result folder
+        file_folder = os.path.dirname(best_res_path)
+        files = os.listdir(file_folder)
+        # find out the best result record file
+        target = [file for file in files if re.findall('record_{}(.*)\.csv'.format(ep), file)]
+        record_paths[key] = file_folder + r'\{}'.format(target[0])
+    return record_paths
+
+
 if __name__ == '__main__':
     project_dir = os.path.dirname(os.path.abspath(__file__))
     logs_dirs = {'mappo': project_dir + r'\train_logs\mappo',
@@ -124,15 +157,14 @@ if __name__ == '__main__':
                  'ippo-sl': project_dir + r'\train_logs\ippo_state_limit',
                  'maddpg-sl': project_dir + r'\train_logs\maddpg_state_limit'
                  }
-    fontsize = 14
-    indexsize = 12
+    fontsize = 16
+    indexsize = 14
+    linewidth_1 = 2
+    linewidth_2 = 2
     ep = 5000
     time_labels = ['0', '2', '4', '6', '8', '10', '12', '14', '16', '18', '20', '22', '0']
-    # colors = {'mappo': 'red', 'ippo': 'blue', 'maddpg': 'green'}
-    # file_paths = get_files_paths(logs_dirs, 'r_(.*){}\.csv'.format(ep))
-    # # rewards_plot(file_paths)
-    # print(file_paths)
-    # mean_r_smooth = get_mean_reward(file_paths, 31)
-    # mean_r = get_mean_reward(file_paths, 0)
-    # plot_df(mean_r_smooth, mean_r, True)
-    plot_load()
+    time_index = range(0, 97, 8)
+    colors = {'mappo': 'red', 'ippo': 'blue', 'maddpg': 'green'}
+    # plot_reward_figs()
+    # plot_load()
+    plot_record()
