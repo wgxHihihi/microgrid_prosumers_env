@@ -114,17 +114,28 @@ def plot_record():
         data = pd.read_csv(path)
         p_net = data['p_net']
         tou = data['rtp']
-        plt.figure(figsize=[8, 5])
-        plt.plot(range(len(p_net)), p_net, linewidth=linewidth_1, label='P_net')
-        plt.plot(range(len(tou)), tou, linewidth=linewidth_1, label='rtp')
-        plt.legend(fontsize=indexsize)
+        fig = plt.figure(figsize=[8, 5])
+        ax1 = fig.add_subplot()
+        p_net_line = ax1.plot(range(len(p_net)), p_net, color='royalblue', linewidth=linewidth_1, label='P_net')
+
+        ax1.tick_params(labelsize=indexsize)
+        ax1.set_xlim(0, 96)
+        ax1.set_ylim(0, 25)
+        ax1.set_xlabel('time (H)', fontsize=fontsize)
+        ax1.set_ylabel('power (kW)', fontsize=fontsize)
+
+        ax2 = ax1.twinx()
+        tou_line = ax2.step(range(len(tou)), tou, color='g', linewidth=linewidth_1, label='TOU')
+        ax2.set_ylabel('time-of-use price ($)', fontsize=fontsize)
+        ax2.set_ylim(0, 0.6)
+        lines = [p_net_line[0], tou_line[0]]
+        print(lines)
+        plt.legend(lines, [l.get_label() for l in lines], fontsize=indexsize,loc=2)
         plt.xticks(time_index, time_labels)
-        plt.tick_params(labelsize=indexsize)
-        plt.xlim(0, 96)
-        plt.xlabel('time (H)', fontsize=fontsize)
-        plt.ylabel('power (kW)', fontsize=fontsize)
 
     plot_after_scheduling(best_res_paths['mappo'])
+    without_dr_path = './train_logs/witout_dr/record_without_dr_1.csv'
+    plot_after_scheduling(without_dr_path)
     plt.show()
 
 
