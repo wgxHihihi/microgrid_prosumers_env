@@ -6,7 +6,10 @@ import numpy as np
 import os
 import re
 
-sns.set()
+sns.set(style='ticks')
+
+
+# sns.despine(top=True, right=True, left=True, bottom=True)
 
 
 def smooth(data, sm=1):
@@ -48,11 +51,33 @@ def plot_df(df_smooth: dict, df: dict, is_smooth: bool):
         for algo, data in df.items():
             total_r = data[:, 0, 0]
             # print(len(total_r))
-            plt.plot(range(len(total_r)), list(total_r), color=colors[algo], alpha=0.5)
-    plt.legend()
+            plt.plot(range(len(total_r)), list(total_r), color=colors[algo], linewidth=2, alpha=0.5)
+    plt.legend(fontsize=indexsize)
+    plt.xticks(fontsize=indexsize)
     plt.xlim(0, 5000)
-    plt.ylabel('Rewards')
-    plt.xlabel('Episodes')
+    plt.ylabel('Rewards', fontsize=fontsize)
+    plt.xlabel('Episodes', fontsize=fontsize)
+    plt.show()
+
+
+def plot_load():
+    home_a = 'residentialenv/training_data/building_data/hasPV/home1642.csv'
+    home_b = 'residentialenv/training_data/building_data/hasPV/home2335.csv'
+    home_c = 'residentialenv/training_data/building_data/noPV/home5746.csv'
+    home_d = 'residentialenv/training_data/building_data/noPV/home7901.csv'
+    home_e = 'residentialenv/training_data/building_data/noPV/home7951.csv'
+    dirs = {'home_a': home_a, 'home_b': home_b, 'home_c': home_c, 'home_d': home_d, 'home_e': home_e}
+    day_index = 1
+    plt.figure(figsize=[8, 5])
+    for key, path in dirs.items():
+        data = pd.read_csv(path)
+        grid_data = data['grid'][day_index * 96:(day_index + 1) * 96]
+        plt.plot(range(len(grid_data)), grid_data, label=key)
+    plt.legend(fontsize=indexsize)
+    plt.xlabel('time (H)', fontsize=fontsize)
+    plt.xlim(0, 96)
+    plt.xticks(range(0, 97, 8), labels=time_labels, fontsize=indexsize)
+    plt.ylabel('Power (kW)', fontsize=fontsize)
     plt.show()
 
 
@@ -99,11 +124,15 @@ if __name__ == '__main__':
                  'ippo-sl': project_dir + r'\train_logs\ippo_state_limit',
                  'maddpg-sl': project_dir + r'\train_logs\maddpg_state_limit'
                  }
+    fontsize = 14
+    indexsize = 12
     ep = 5000
+    time_labels = ['0', '2', '4', '6', '8', '10', '12', '14', '16', '18', '20', '22', '0']
     # colors = {'mappo': 'red', 'ippo': 'blue', 'maddpg': 'green'}
-    file_paths = get_files_paths(logs_dirs, 'r_(.*){}\.csv'.format(ep))
-    # rewards_plot(file_paths)
-    print(file_paths)
-    mean_r_smooth = get_mean_reward(file_paths, 31)
-    mean_r = get_mean_reward(file_paths, 0)
-    plot_df(mean_r_smooth, mean_r, True)
+    # file_paths = get_files_paths(logs_dirs, 'r_(.*){}\.csv'.format(ep))
+    # # rewards_plot(file_paths)
+    # print(file_paths)
+    # mean_r_smooth = get_mean_reward(file_paths, 31)
+    # mean_r = get_mean_reward(file_paths, 0)
+    # plot_df(mean_r_smooth, mean_r, True)
+    plot_load()
