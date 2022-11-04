@@ -5,6 +5,7 @@ from scipy.signal import savgol_filter
 import numpy as np
 import os
 import re
+import math
 
 sns.set(style='ticks')
 
@@ -45,34 +46,74 @@ def plot_reward_figs():
     df_smooth = get_mean_reward(file_paths, 31)
     df_origin = get_mean_reward(file_paths, 0)
 
-    def plot_df(df_s: dict, df: dict, is_smooth: bool, fig_num: int, legend: bool):
-        plt.figure(fig_num, figsize=(8, 5))
+    def plot_df(df_s: dict, df: dict, is_smooth: list, axis_label: list, legend: bool):
+        plt.figure(figsize=(8, 5))
         colors = {}
-        for algo, data in df_s.items():
-            total_r = data[:, 0, 0]
-            a = plt.plot(range(len(total_r)), list(total_r), label=algo, linewidth=linewidth_1)
-            colors[algo] = a[0]._color
-        if is_smooth:
+        if is_smooth[0]:
+            for algo, data in df_s.items():
+                total_r = data[:, 0, 0]
+                a = plt.plot(range(len(total_r)), list(total_r), label=algo, linewidth=linewidth_1)
+                colors[algo] = a[0]._color
+        if is_smooth[1]:
             for algo, data in df.items():
                 total_r = data[:, 0, 0]
                 # print(len(total_r))
-                plt.plot(range(len(total_r)), list(total_r), color=colors[algo], linewidth=linewidth_2, alpha=0.5)
+                if is_smooth[0]:
+                    plt.plot(range(len(total_r)), list(total_r), color=colors[algo], linewidth=linewidth_2, alpha=0.5)
+                else:
+                    plt.plot(range(len(total_r)), list(total_r), linewidth=linewidth_1, label=algo)
         if legend:
             plt.legend(fontsize=indexsize)
         plt.tick_params(labelsize=indexsize)
         plt.xlim(0, 5000)
-        plt.ylabel('Rewards', fontsize=fontsize)
-        plt.xlabel('Episodes', fontsize=fontsize)
+        plt.ylabel(axis_label[1], fontsize=fontsize)
+        plt.xlabel(axis_label[0], fontsize=fontsize)
+
+    def plot_bar(df: dict, legend: bool, axis_label: list, x_labels: list):
+        # df = {'mappo': [1, 2, 3], 'mappo2': [1, 2, 3], 'mappo3': [1, 2, 3], 'mappo4': [1, 2, 4], 'mappo5': [1, 2, 3],
+        #       'mappo6': [1, 2, 3]}
+        # df = {'mappo': [1, 2], 'mappo2': [1, 2], 'mappo3': [1, 2], 'mappo4': [1, 2], 'mappo5': [1, 2],
+        #       'mappo6': [1, 2]}
+        # df = {'mappo': [1, 2, 3]}
+        width = 0.25
+        df_len = len(df)
+        start_bias = width * df_len / 2
+        space = 0.125
+        x = [0 + j * (width * df_len + space) for j in range(len(list(df.values())[0]))]
+        x = np.array(x)
+        for i, item in enumerate(df.items()):
+            key, vals = item[0], item[1]
+            plt.bar(x - start_bias + (2 * i + 1) * width / 2, vals, width=width, label=key)
+        plt.xticks(x, x_labels)
+        if legend:
+            plt.legend(fontsize=indexsize)
+        plt.tick_params(labelsize=indexsize)
+        plt.ylabel(axis_label[1], fontsize=fontsize)
+        plt.xlabel(axis_label[0], fontsize=fontsize)
 
     # proposed reward
-    proposed_dict_s, proposed_dict = {'mappo': df_smooth['mappo']}, {'mappo': df_origin['mappo']}
-    plot_df(proposed_dict_s, proposed_dict, is_smooth=True, fig_num=1, legend=False)
-    # comparison rewards
-    plot_df(df_smooth, df_origin, is_smooth=True, fig_num=2, legend=True)
+    # proposed_dict_s, proposed_dict = {'mappo': df_smooth['mappo']}, {'mappo': df_origin['mappo']}
+    # plot_df(proposed_dict_s, proposed_dict, is_smooth=[True, True], axis_label=['Episodes', 'Rewards ($)'],
+    #         legend=False)
+    # # proposed electricity cost
+    # proposed_ele_cost_s = {}
+    # proposed_ele_cost = {}
+    # for index, home in enumerate('ABCDE'):
+    #     proposed_ele_cost_s['home_' + home] = -proposed_dict_s['mappo'][:, index + 1, np.newaxis]
+    #     proposed_ele_cost['home_' + home] = -proposed_dict['mappo'][:, index + 1, np.newaxis]
+    # plot_df(proposed_ele_cost_s, proposed_ele_cost, axis_label=['Episodes', 'Electricity cost ($)'],
+    #         is_smooth=[True, True], legend=True)
+    # # comparison rewards
+    # plot_df(df_smooth, df_origin, is_smooth=[True, True], axis_label=['Episodes', 'Rewards ($)'], legend=True)
+    # last reward values
+    last_rewards = df_origin['mappo'][-1]
+    last_reward_df = {'mappo': last_rewards[1:, 0]}
+    plot_bar(last_reward_df, axis_label=['Episodes', 'Rewards ($)'], legend=True,
+             x_labels=['a', 'b', 'c', 'd', 'e', 'f', 'g'])
     plt.show()
 
 
-def plot_load():
+def plot_load_figs():
     home_a = 'residentialenv/training_data/building_data/hasPV/home1642.csv'
     home_b = 'residentialenv/training_data/building_data/hasPV/home2335.csv'
     home_c = 'residentialenv/training_data/building_data/noPV/home5746.csv'
@@ -107,7 +148,7 @@ def get_files_paths(train_logs_dirs, patten):
     return paths
 
 
-def plot_record():
+def plot_record_figs():
     best_res_paths = get_beat_result(logs_dirs)
 
     def plot_after_scheduling(path):
@@ -117,10 +158,12 @@ def plot_record():
         fig = plt.figure(figsize=[8, 5])
         ax1 = fig.add_subplot()
         p_net_line = ax1.plot(range(len(p_net)), p_net, color='royalblue', linewidth=linewidth_1, label='P_net')
-
+        p_lim_line = ax1.hlines(y=14, xmin=0, xmax=96, color='deeppink', label='power_limitation', linestyle='--',
+                                linewidth=linewidth_1)
         ax1.tick_params(labelsize=indexsize)
         ax1.set_xlim(0, 96)
-        ax1.set_ylim(0, 25)
+        ax1.set_ylim(0, 24)
+        ax1.set_yticks(range(0, 25, 2))
         ax1.set_xlabel('time (H)', fontsize=fontsize)
         ax1.set_ylabel('power (kW)', fontsize=fontsize)
 
@@ -128,9 +171,12 @@ def plot_record():
         tou_line = ax2.step(range(len(tou)), tou, color='g', linewidth=linewidth_1, label='TOU')
         ax2.set_ylabel('time-of-use price ($)', fontsize=fontsize)
         ax2.set_ylim(0, 0.6)
-        lines = [p_net_line[0], tou_line[0]]
+        ax2.tick_params(labelsize=indexsize)
+
+        lines = [p_net_line[0], tou_line[0], p_lim_line]
         print(lines)
-        plt.legend(lines, [l.get_label() for l in lines], fontsize=indexsize,loc=2)
+
+        plt.legend(lines, [l.get_label() for l in lines], fontsize=indexsize, loc=2)
         plt.xticks(time_index, time_labels)
 
     plot_after_scheduling(best_res_paths['mappo'])
@@ -148,7 +194,7 @@ def get_beat_result(train_logs_dirs):
         for path in paths:
             last_reward = pd.read_csv(path).iloc[-1, 1]
             last_rewards[path] = last_reward
-
+        # find out the best result
         best_res_path = max(last_rewards, key=lambda x: last_rewards[x])
         # find out the best result folder
         file_folder = os.path.dirname(best_res_path)
@@ -176,6 +222,8 @@ if __name__ == '__main__':
     time_labels = ['0', '2', '4', '6', '8', '10', '12', '14', '16', '18', '20', '22', '0']
     time_index = range(0, 97, 8)
     colors = {'mappo': 'red', 'ippo': 'blue', 'maddpg': 'green'}
-    # plot_reward_figs()
+
+    # plot figures
+    plot_reward_figs()
     # plot_load()
-    plot_record()
+    # plot_record_figs()
