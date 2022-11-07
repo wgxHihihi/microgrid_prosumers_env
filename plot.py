@@ -37,6 +37,7 @@ def get_mean_reward(paths, smooth_range):
             mean_r.append(data_np)
         mean_rewards = np.stack(mean_r, axis=-1)
         mean_r_value = np.mean(mean_rewards, axis=-1)
+        mean_r_value[:, 0, 0] = mean_r_value[:, 0, 0] - mean_r_value[:, -1, 0]
         df[algo] = mean_r_value
     return df
 
@@ -69,18 +70,12 @@ def plot_reward_figs():
         plt.ylabel(axis_label[1], fontsize=fontsize)
         plt.xlabel(axis_label[0], fontsize=fontsize)
 
-    def plot_bar(df: dict, legend: bool, axis_label: list, x_labels: list):
-        # df = {'mappo': [1, 2, 3], 'mappo2': [1, 2, 3], 'mappo3': [1, 2, 3], 'mappo4': [1, 2, 4], 'mappo5': [1, 2, 3],
-        #       'mappo6': [1, 2, 3]}
-        # df = {'mappo': [1, 2], 'mappo2': [1, 2], 'mappo3': [1, 2], 'mappo4': [1, 2], 'mappo5': [1, 2],
-        #       'mappo6': [1, 2]}
-        # df = {'mappo': [1, 2, 3]}
-        width = 0.25
+    def plot_bar(df: dict, legend: bool, axis_label: list, x_labels: list, width=0.25, space=0.125):
         df_len = len(df)
         start_bias = width * df_len / 2
-        space = 0.125
         x = [0 + j * (width * df_len + space) for j in range(len(list(df.values())[0]))]
         x = np.array(x)
+        plt.figure(figsize=[8, 5])
         for i, item in enumerate(df.items()):
             key, vals = item[0], item[1]
             plt.bar(x - start_bias + (2 * i + 1) * width / 2, vals, width=width, label=key)
@@ -88,38 +83,50 @@ def plot_reward_figs():
         if legend:
             plt.legend(fontsize=indexsize)
         plt.tick_params(labelsize=indexsize)
-        plt.ylabel(axis_label[1], fontsize=fontsize)
-        plt.xlabel(axis_label[0], fontsize=fontsize)
+        if axis_label[0].strip() != '':
+            plt.xlabel(axis_label[0], fontsize=fontsize)
+        else:
+            plt.xticks(fontsize=fontsize)
+        if axis_label[1].strip() != '':
+            plt.ylabel(axis_label[1], fontsize=fontsize)
 
     # proposed reward
-    # proposed_dict_s, proposed_dict = {'mappo': df_smooth['mappo']}, {'mappo': df_origin['mappo']}
-    # plot_df(proposed_dict_s, proposed_dict, is_smooth=[True, True], axis_label=['Episodes', 'Rewards ($)'],
-    #         legend=False)
-    # # proposed electricity cost
-    # proposed_ele_cost_s = {}
-    # proposed_ele_cost = {}
-    # for index, home in enumerate('ABCDE'):
-    #     proposed_ele_cost_s['home_' + home] = -proposed_dict_s['mappo'][:, index + 1, np.newaxis]
-    #     proposed_ele_cost['home_' + home] = -proposed_dict['mappo'][:, index + 1, np.newaxis]
-    # plot_df(proposed_ele_cost_s, proposed_ele_cost, axis_label=['Episodes', 'Electricity cost ($)'],
-    #         is_smooth=[True, True], legend=True)
-    # # comparison rewards
-    # plot_df(df_smooth, df_origin, is_smooth=[True, True], axis_label=['Episodes', 'Rewards ($)'], legend=True)
+    proposed_dict_s, proposed_dict = {'mappo': df_smooth['mappo']}, {'mappo': df_origin['mappo']}
+    plot_df(proposed_dict_s, proposed_dict, is_smooth=[True, True], axis_label=['Episodes', 'Rewards ($)'],
+            legend=False)
+
+    # proposed electricity cost
+    proposed_ele_cost_s = {}
+    proposed_ele_cost = {}
+    for index, home in enumerate('ABCDE'):
+        proposed_ele_cost_s['home_' + home] = -proposed_dict_s['mappo'][:, index + 1, np.newaxis]
+        proposed_ele_cost['home_' + home] = -proposed_dict['mappo'][:, index + 1, np.newaxis]
+    plot_df(proposed_ele_cost_s, proposed_ele_cost, axis_label=['Episodes', 'Electricity cost ($)'],
+            is_smooth=[True, True], legend=True)
+
+    # comparison rewards
+    plot_df(df_smooth, df_origin, is_smooth=[True, True], axis_label=['Episodes', 'Rewards ($)'], legend=True)
+
     # last reward values
-    last_rewards = df_origin['mappo'][-1]
-    last_reward_df = {'mappo': last_rewards[1:, 0]}
-    plot_bar(last_reward_df, axis_label=['Episodes', 'Rewards ($)'], legend=True,
-             x_labels=['a', 'b', 'c', 'd', 'e', 'f', 'g'])
+    last_reward_df = {}
+    for key, vals in df_origin.items():
+        last_rewards = df_origin[key][-1]
+        ele_cost = -last_rewards[1:-2, 0].sum()
+        p_lim = -last_rewards[-2, 0]
+        last_reward_df[key] = [ele_cost, p_lim]
+    plot_bar(last_reward_df, axis_label=['', 'Cost and penalty ($)'], legend=True,
+             x_labels=['ele_cost', 'p_lim'],
+             width=0.125, space=0.25)
     plt.show()
 
 
 def plot_load_figs():
-    home_a = 'residentialenv/training_data/building_data/hasPV/home1642.csv'
-    home_b = 'residentialenv/training_data/building_data/hasPV/home2335.csv'
-    home_c = 'residentialenv/training_data/building_data/noPV/home5746.csv'
-    home_d = 'residentialenv/training_data/building_data/noPV/home7901.csv'
-    home_e = 'residentialenv/training_data/building_data/noPV/home7951.csv'
-    dirs = {'home_a': home_a, 'home_b': home_b, 'home_c': home_c, 'home_d': home_d, 'home_e': home_e}
+    home_a = 'residentialenv/training_data/building_data/noPV/home5746.csv'
+    home_b = 'residentialenv/training_data/building_data/noPV/home7901.csv'
+    home_c = 'residentialenv/training_data/building_data/noPV/home7951.csv'
+    home_d = 'residentialenv/training_data/building_data/hasPV/home1642.csv'
+    home_e = 'residentialenv/training_data/building_data/hasPV/home2335.csv'
+    dirs = {'home_A': home_a, 'home_B': home_b, 'home_C': home_c, 'home_D': home_d, 'home_E': home_e}
     day_index = 1
     plt.figure(figsize=[8, 5])
     for key, path in dirs.items():
@@ -179,9 +186,63 @@ def plot_record_figs():
         plt.legend(lines, [l.get_label() for l in lines], fontsize=indexsize, loc=2)
         plt.xticks(time_index, time_labels)
 
-    plot_after_scheduling(best_res_paths['mappo'])
+    def plot_soc(path):
+        data = pd.read_csv(path)
+        plt.figure(figsize=[8, 5])
+        for index, label in enumerate('ABCDE'):
+            soc = data['soc' + str(index + 1)]
+            plt.plot(range(len(soc)), soc * 100, label='home' + label, linewidth=linewidth_1)
+        plt.xticks(time_index, time_labels)
+        plt.xlabel('Time (H)', fontsize=fontsize)
+        plt.ylabel('State-of-charge (%)', fontsize=fontsize)
+        plt.legend(fontsize=indexsize)
+
+    def plt_home_power(after_path: str, before_path: str):
+        data_after_schedule = pd.read_csv(after_path)
+        rtp = data_after_schedule['rtp']
+        plt.figure(figsize=[16, 4])
+        y_lim = [[-2, 6], [-2, 10], [-2, 8], [-5, 5], [-5, 10]]
+        for plt_index in range(1, 6):
+            home_power = data_after_schedule['power_' + str(plt_index)]
+            # 往画布上添加子图：按三行二列，添加到下标为plt_index的位置
+            ax1 = plt.subplot(2, 5, plt_index+5)
+            # 绘图
+            ax1.plot(home_power)
+            ax1.set_ylim(y_lim[plt_index-1])
+            ax1.set_ylabel('power (kW)')
+            ax2 = ax1.twinx()
+            ax2.step(range(len(rtp)), rtp, color='red', label='rtp')
+            ax2.set_ylim(0, 0.6)
+            ax2.set_ylabel('rtp ($)')
+            plt.xlim(0, 96)
+            plt.xticks(range(0, 97, 24), ['0', '6', '12', '18', '0'])
+
+
+        data_before_schedule = pd.read_csv(before_path)
+        for plt_index in range(1, 6):
+            home_power = data_before_schedule['power_' + str(plt_index)]
+            # 往画布上添加子图：按三行二列，添加到下标为plt_index的位置
+            ax1 = plt.subplot(2, 5, plt_index)
+            # 绘图
+            ax1.plot(home_power)
+            ax1.set_ylim(y_lim[plt_index-1])
+            ax1.set_ylabel('power (kW)')
+            ax2 = ax1.twinx()
+            ax2.step(range(len(rtp)), rtp, color='red', label='rtp')
+            ax2.set_ylim(0, 0.6)
+            ax2.set_ylabel('rtp ($)')
+            plt.xlim(0, 96)
+            plt.xticks([])
+            # plt.xticks(range(0, 97, 24), ['0', '6', '12', '18', '0'])
+            plt.title('home_' + chr(ord('A') + plt_index - 1))
+        plt.tight_layout()
+        # plt.subplots_adjust(wspace=0.5, hspace=0.1)
+    # plot_after_scheduling(best_res_paths['mappo'])
+    # plot_soc(best_res_paths['mappo'])
+
     without_dr_path = './train_logs/witout_dr/record_without_dr_1.csv'
-    plot_after_scheduling(without_dr_path)
+    plt_home_power(best_res_paths['mappo'], without_dr_path)
+    # plot_after_scheduling(without_dr_path)
     plt.show()
 
 
@@ -224,6 +285,6 @@ if __name__ == '__main__':
     colors = {'mappo': 'red', 'ippo': 'blue', 'maddpg': 'green'}
 
     # plot figures
-    plot_reward_figs()
-    # plot_load()
-    # plot_record_figs()
+    # plot_reward_figs()
+    # plot_load_figs()
+    plot_record_figs()
