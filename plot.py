@@ -199,44 +199,59 @@ def plot_record_figs():
 
     def plt_home_power(after_path: str, before_path: str):
         data_after_schedule = pd.read_csv(after_path)
-        rtp = data_after_schedule['rtp']
-        plt.figure(figsize=[16, 4])
-        y_lim = [[-2, 6], [-2, 10], [-2, 8], [-5, 5], [-5, 10]]
-        for plt_index in range(1, 6):
-            home_power = data_after_schedule['power_' + str(plt_index)]
-            # 往画布上添加子图：按三行二列，添加到下标为plt_index的位置
-            ax1 = plt.subplot(2, 5, plt_index+5)
-            # 绘图
-            ax1.plot(home_power)
-            ax1.set_ylim(y_lim[plt_index-1])
-            ax1.set_ylabel('power (kW)')
-            ax2 = ax1.twinx()
-            ax2.step(range(len(rtp)), rtp, color='red', label='rtp')
-            ax2.set_ylim(0, 0.6)
-            ax2.set_ylabel('rtp ($)')
-            plt.xlim(0, 96)
-            plt.xticks(range(0, 97, 24), ['0', '6', '12', '18', '0'])
-
-
         data_before_schedule = pd.read_csv(before_path)
-        for plt_index in range(1, 6):
-            home_power = data_before_schedule['power_' + str(plt_index)]
-            # 往画布上添加子图：按三行二列，添加到下标为plt_index的位置
-            ax1 = plt.subplot(2, 5, plt_index)
-            # 绘图
-            ax1.plot(home_power)
-            ax1.set_ylim(y_lim[plt_index-1])
-            ax1.set_ylabel('power (kW)')
+        rtp = data_after_schedule['rtp']
+
+        y_lim = [[-2, 6], [-2, 10], [-2, 8], [-5, 5], [-5, 10], [0, 24]]
+        before, after = {}, {}
+        for index, home in enumerate('ABCDE'):
+            power_before = data_before_schedule['power_' + str(index + 1)]
+            power_after = data_after_schedule['power_' + str(index + 1)]
+            before['home_' + home] = power_before
+            after['home_' + home] = power_after
+        # before['p_mu'] = data_before_schedule['p_net']
+        # after['p_mu'] = data_after_schedule['p_net']
+        plt.figure(figsize=[8, 8])
+        for index, key_val in enumerate(before.items()):
+            key = key_val[0]
+            power_before = key_val[1]
+            power_after = after[key]
+            ax1 = plt.subplot(5, 1, index + 1)
+
+            p_after = ax1.plot(range(len(power_after)), power_after, label='P_rb (after scheduling)',
+                               linewidth=linewidth_1)
+            p_before = ax1.plot(range(len(power_before)), power_before, label='P_rb (before scheduling)',
+                                linewidth=linewidth_1)
+            ax1.set_ylim(y_lim[index])
+            ax1.set_ylabel('power (kW)', fontsize=fontsize)
+            ax1.tick_params(labelsize=indexsize)
             ax2 = ax1.twinx()
-            ax2.step(range(len(rtp)), rtp, color='red', label='rtp')
+            rtp_line = ax2.step(range(len(rtp)), rtp, color='seagreen', label='rtp', linewidth=linewidth_1,
+                                linestyle='--', alpha=0.9)
             ax2.set_ylim(0, 0.6)
-            ax2.set_ylabel('rtp ($)')
+            ax2.set_ylabel('rtp ($)', fontsize=fontsize)
+            # ax2.set_xlabel('rtp ($)', fontsize=fontsize)
+            ax2.tick_params(labelsize=indexsize)
+
+            lines = [p_after[0], p_before[0], rtp_line[0]]
+            # plt.legend(lines, [l.get_label() for l in lines])
+            plt.title(key, fontsize=indexsize)
             plt.xlim(0, 96)
-            plt.xticks([])
-            # plt.xticks(range(0, 97, 24), ['0', '6', '12', '18', '0'])
-            plt.title('home_' + chr(ord('A') + plt_index - 1))
+            plt.xticks(time_index, time_labels)
+
+            ax = plt.gca()
+
+            ax.axes.xaxis.set_ticklabels([])
+            # ax.axes.yaxis.set_ticklabels([])
+        ra = range(0, 97, 16)
+        la = ['0', '6', '12', '18', '0']
+        plt.xticks(time_index, time_labels)
+        # plt.legend(lines, [l.get_label() for l in lines])
+        # plt.gca()
+        plt.xlabel('time (H)', fontsize=fontsize)
         plt.tight_layout()
         # plt.subplots_adjust(wspace=0.5, hspace=0.1)
+
     # plot_after_scheduling(best_res_paths['mappo'])
     # plot_soc(best_res_paths['mappo'])
 
