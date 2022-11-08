@@ -227,7 +227,7 @@ class Runner_MAPPO:
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("Hyperparameters Setting for MAPPO in SMAC environment")
-    parser.add_argument("--max_train_steps", type=int, default=int(5000), help=" Maximum number of training steps")
+    parser.add_argument("--max_train_steps", type=int, default=int(10000), help=" Maximum number of training steps")
     parser.add_argument("--episode_limit", type=int, default=96, help="Maximum number of steps per episode")
     parser.add_argument("--evaluate_freq", type=float, default=5000,
                         help="Evaluate the policy every 'evaluate_freq' steps")
@@ -262,6 +262,6 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     for i in range(2):
-        seed = random.randint(2, 20)
+        seed = random.randint(21, 30)
         runner = Runner_MAPPO(args, seed=seed)
         runner.run()
