@@ -101,7 +101,9 @@ def plot_reward_figs():
     for index, home in enumerate('ABCDE'):
         proposed_ele_cost_s['home_' + home] = -proposed_dict_s['mappo'][:, index + 1, np.newaxis]
         proposed_ele_cost['home_' + home] = -proposed_dict['mappo'][:, index + 1, np.newaxis]
-    plot_df(proposed_ele_cost_s, proposed_ele_cost, axis_label=['Episodes', 'Electricity cost ($)'],
+    proposed_ele_cost_s['penalty'] = -proposed_dict_s['mappo'][:, 6, np.newaxis]
+    proposed_ele_cost['penalty'] = -proposed_dict['mappo'][:, 6, np.newaxis]
+    plot_df(proposed_ele_cost_s, proposed_ele_cost, axis_label=['Episodes', 'Cost and penalty ($)'],
             is_smooth=[True, True], legend=True)
 
     # comparison rewards
@@ -300,6 +302,6 @@ if __name__ == '__main__':
     colors = {'mappo': 'red', 'ippo': 'blue', 'maddpg': 'green'}
 
     # plot figures
-    # plot_reward_figs()
+    plot_reward_figs()
     # plot_load_figs()
-    plot_record_figs()
+    # plot_record_figs()
