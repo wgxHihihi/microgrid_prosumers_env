@@ -166,9 +166,18 @@ def plot_record_figs():
         tou = data['rtp']
         fig = plt.figure(figsize=[8, 5])
         ax1 = fig.add_subplot()
-        p_net_line = ax1.plot(range(len(p_net)), p_net, color='royalblue', linewidth=linewidth_1, label='P_net')
+        p_net_max_index, p_net_min_index = p_net.idxmax(), p_net.idxmin()
+        p_net_max, p_net_min = p_net[p_net_max_index], p_net[p_net_min_index]
+
+        p_net_line = ax1.plot(range(len(p_net)), p_net, color='royalblue', linewidth=linewidth_1, label='P_mu',
+                              zorder=1)
         p_lim_line = ax1.hlines(y=14, xmin=0, xmax=96, color='deeppink', label='power_limitation', linestyle='--',
-                                linewidth=linewidth_1)
+                                linewidth=linewidth_1, zorder=1)
+
+        ax1.scatter([p_net_max_index, p_net_min_index], [p_net_max, p_net_min], s=50, c='gold', zorder=2)
+        ax1.text(p_net_max_index, p_net_max+0.5, 'max: %.1f' % p_net_max, fontsize=indexsize)
+        ax1.text(p_net_min_index+1, p_net_min, 'min: %.1f' % p_net_min, fontsize=indexsize)
+
         ax1.tick_params(labelsize=indexsize)
         ax1.set_xlim(0, 96)
         ax1.set_ylim(0, 24)
@@ -254,12 +263,12 @@ def plot_record_figs():
         plt.tight_layout()
         # plt.subplots_adjust(wspace=0.5, hspace=0.1)
 
-    # plot_after_scheduling(best_res_paths['mappo'])
+    plot_after_scheduling(best_res_paths['mappo'])
     # plot_soc(best_res_paths['mappo'])
 
     without_dr_path = './train_logs/witout_dr/record_without_dr_1.csv'
-    plt_home_power(best_res_paths['mappo'], without_dr_path)
-    # plot_after_scheduling(without_dr_path)
+    # plt_home_power(best_res_paths['mappo'], without_dr_path)
+    plot_after_scheduling(without_dr_path)
     plt.show()
 
 
@@ -302,6 +311,6 @@ if __name__ == '__main__':
     colors = {'mappo': 'red', 'ippo': 'blue', 'maddpg': 'green'}
 
     # plot figures
-    plot_reward_figs()
+    # plot_reward_figs()
     # plot_load_figs()
-    # plot_record_figs()
+    plot_record_figs()
