@@ -262,6 +262,6 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     for i in range(2):
-        seed = random.randint(21, 30)
+        seed = random.randint(31, 40)
         runner = Runner_MAPPO(args, seed=seed)
         runner.run()

@@ -6,7 +6,8 @@ class env_adapter:
     def __init__(self, seed):
         self.env = microgrid(seed)
         self.n_agents = self.env.n_agents
-        self.obs_shape = [5] * self.n_agents
+        # self.obs_shape = [5] * self.n_agents
+        self.obs_shape = self.env.obs_space
         self.state_shape = sum(self.env.obs_space)
         self.action_shape = self.env.act_space
         self.n_players = self.env.n_agents
@@ -48,7 +49,7 @@ class env_adapter:
     def reset(self):
         self.env.day_index = 1
         state, state_shared, info = self.env.reset()
-        state = self.limit_state(state)
+        # state = self.limit_state(state)
         return state, info
 
     def limit_state(self, state):
