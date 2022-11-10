@@ -70,7 +70,7 @@ def plot_reward_figs():
         plt.ylabel(axis_label[1], fontsize=fontsize)
         plt.xlabel(axis_label[0], fontsize=fontsize)
 
-    def plot_bar(df: dict, legend: bool, axis_label: list, x_labels: list, width=0.25, space=0.125):
+    def plot_bar(df: dict, legend: bool, axis_label: list, x_labels: list, width=0.25, space=0.125, y_lim=None):
         df_len = len(df)
         start_bias = width * df_len / 2
         x = [0 + j * (width * df_len + space) for j in range(len(list(df.values())[0]))]
@@ -81,7 +81,9 @@ def plot_reward_figs():
             range_x = x - start_bias + (2 * i + 1) * width / 2
             plt.bar(range_x, vals, width=width, label=key)
             for text_x, text_y in zip(range_x, vals):
-                plt.text(text_x, text_y + 0.5, '%.1f' % text_y, fontsize=indexsize)
+                plt.text(text_x, text_y + 0.5, '%.1f' % text_y, fontsize=indexsize, horizontalalignment='center')
+        if y_lim is not None:
+            plt.ylim(y_lim)
         plt.xticks(x, x_labels)
         if legend:
             plt.legend(fontsize=indexsize)
@@ -119,9 +121,13 @@ def plot_reward_figs():
         ele_cost = -last_rewards[1:-2, 0].sum()
         p_lim = -last_rewards[-2, 0]
         last_reward_df[key] = [ele_cost, p_lim]
-    plot_bar(last_reward_df, axis_label=['', 'Cost and penalty ($)'], legend=True,
+    plot_bar(last_reward_df,
+             axis_label=['', 'Cost and penalty ($)'],
+             legend=True,
              x_labels=['ele_cost', 'p_lim'],
-             width=0.125, space=0.25)
+             y_lim=[0, 90],
+             width=0.125,
+             space=0.25)
     plt.show()
 
 
