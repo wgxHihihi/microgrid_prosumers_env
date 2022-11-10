@@ -307,9 +307,9 @@ if __name__ == '__main__':
     logs_dirs = {'mappo': project_dir + r'\train_logs\mappo',
                  'ippo': project_dir + r'\train_logs\ippo',
                  'maddpg': project_dir + r'\train_logs\maddpg',
-                 'mappo-sl': project_dir + r'\train_logs\mappo_state_limit',
-                 'ippo-sl': project_dir + r'\train_logs\ippo_state_limit',
-                 'maddpg-sl': project_dir + r'\train_logs\maddpg_state_limit'
+                 'mappo-ls': project_dir + r'\train_logs\mappo_state_limit',
+                 'ippo-ls': project_dir + r'\train_logs\ippo_state_limit',
+                 'maddpg-ls': project_dir + r'\train_logs\maddpg_state_limit'
                  }
     fontsize = 16
     indexsize = 14
