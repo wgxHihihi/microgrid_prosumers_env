@@ -43,7 +43,7 @@ class env_adapter:
         # print(actions)
         state, state_share, r, done, info, _ = self.env.step(actions)
         rewards = self.reward_refactor(r, info, self.n_agents)
-        state = self.limit_state(state)
+        # state = self.limit_state(state)
         return state, rewards, done, info, r
 
     def reset(self):
