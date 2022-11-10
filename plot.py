@@ -78,7 +78,10 @@ def plot_reward_figs():
         plt.figure(figsize=[8, 5])
         for i, item in enumerate(df.items()):
             key, vals = item[0], item[1]
-            plt.bar(x - start_bias + (2 * i + 1) * width / 2, vals, width=width, label=key)
+            range_x = x - start_bias + (2 * i + 1) * width / 2
+            plt.bar(range_x, vals, width=width, label=key)
+            for text_x, text_y in zip(range_x, vals):
+                plt.text(text_x, text_y + 0.5, '%.1f' % text_y, fontsize=indexsize)
         plt.xticks(x, x_labels)
         if legend:
             plt.legend(fontsize=indexsize)
@@ -166,6 +169,7 @@ def plot_record_figs():
         tou = data['rtp']
         fig = plt.figure(figsize=[8, 5])
         ax1 = fig.add_subplot()
+        # p_net = pd.Series.clip(p_net, None, 14.0)
         p_net_max_index, p_net_min_index = p_net.idxmax(), p_net.idxmin()
         p_net_max, p_net_min = p_net[p_net_max_index], p_net[p_net_min_index]
 
@@ -175,8 +179,8 @@ def plot_record_figs():
                                 linewidth=linewidth_1, zorder=1)
 
         ax1.scatter([p_net_max_index, p_net_min_index], [p_net_max, p_net_min], s=50, c='gold', zorder=2)
-        ax1.text(p_net_max_index, p_net_max+0.5, 'max: %.1f' % p_net_max, fontsize=indexsize)
-        ax1.text(p_net_min_index+1, p_net_min, 'min: %.1f' % p_net_min, fontsize=indexsize)
+        ax1.text(p_net_max_index, p_net_max + 0.5, 'max: %.1f' % p_net_max, fontsize=indexsize)
+        ax1.text(p_net_min_index + 1, p_net_min, 'min: %.1f' % p_net_min, fontsize=indexsize)
 
         ax1.tick_params(labelsize=indexsize)
         ax1.set_xlim(0, 96)
@@ -268,7 +272,7 @@ def plot_record_figs():
 
     without_dr_path = './train_logs/witout_dr/record_without_dr_1.csv'
     # plt_home_power(best_res_paths['mappo'], without_dr_path)
-    plot_after_scheduling(without_dr_path)
+    # plot_after_scheduling(without_dr_path)
     plt.show()
 
 
@@ -311,6 +315,6 @@ if __name__ == '__main__':
     colors = {'mappo': 'red', 'ippo': 'blue', 'maddpg': 'green'}
 
     # plot figures
-    # plot_reward_figs()
+    plot_reward_figs()
     # plot_load_figs()
-    plot_record_figs()
+    # plot_record_figs()
