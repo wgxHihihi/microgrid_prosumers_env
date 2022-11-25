@@ -250,7 +250,7 @@ def plot_record_figs():
             rtp_line = ax2.step(range(len(rtp)), rtp, color='seagreen', label='rtp', linewidth=linewidth_1,
                                 linestyle='--', alpha=0.9)
             ax2.set_ylim(0, 0.6)
-            ax2.set_ylabel('rtp ($)', fontsize=fontsize)
+            ax2.set_ylabel('TOU ($)', fontsize=fontsize)
             # ax2.set_xlabel('rtp ($)', fontsize=fontsize)
             ax2.tick_params(labelsize=indexsize)
 
@@ -277,7 +277,7 @@ def plot_record_figs():
     # plot_soc(best_res_paths['mappo'])
 
     without_dr_path = './train_logs/witout_dr/record_without_dr_1.csv'
-    # plt_home_power(best_res_paths['mappo'], without_dr_path)
+    plt_home_power(best_res_paths['mappo'], without_dr_path)
     # plot_after_scheduling(without_dr_path)
     plt.show()
 
@@ -321,6 +321,6 @@ if __name__ == '__main__':
     colors = {'mappo': 'red', 'ippo': 'blue', 'maddpg': 'green'}
 
     # plot figures
-    plot_reward_figs()
+    # plot_reward_figs()
     # plot_load_figs()
-    # plot_record_figs()
+    plot_record_figs()
