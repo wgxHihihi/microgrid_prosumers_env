@@ -6,6 +6,7 @@ import numpy as np
 import os
 import re
 import math
+from matplotlib import rcParams
 
 sns.set(style='ticks')
 
@@ -47,7 +48,7 @@ def plot_reward_figs():
     df_smooth = get_mean_reward(file_paths, 31)
     df_origin = get_mean_reward(file_paths, 0)
 
-    def plot_df(df_s: dict, df: dict, is_smooth: list, axis_label: list, legend: bool):
+    def plot_df(df_s: dict, df: dict, is_smooth: list, axis_label: list, legend: bool, fig_path: str, name: str):
         plt.figure(figsize=(8, 5))
         colors = {}
         if is_smooth[0]:
@@ -64,13 +65,19 @@ def plot_reward_figs():
                 else:
                     plt.plot(range(len(total_r)), list(total_r), linewidth=linewidth_1, label=algo)
         if legend:
-            plt.legend(fontsize=indexsize)
+            plt.legend(fontsize=indexsize-2)
+
+        plt.xticks(fontproperties=Roman)
+        plt.yticks(fontproperties=Roman)
         plt.tick_params(labelsize=indexsize)
         plt.xlim(0, 5000)
         plt.ylabel(axis_label[1], fontsize=fontsize)
         plt.xlabel(axis_label[0], fontsize=fontsize)
+        plt.tight_layout()
+        plt.savefig(fig_path + '/' + name, dpi=600, format='svg')
 
-    def plot_bar(df: dict, legend: bool, axis_label: list, x_labels: list, width=0.25, space=0.125, y_lim=None):
+    def plot_bar(df: dict, legend: bool, axis_label: list, x_labels: list, fig_path, name, width=0.25, space=0.125,
+                 y_lim=None):
         df_len = len(df)
         start_bias = width * df_len / 2
         x = [0 + j * (width * df_len + space) for j in range(len(list(df.values())[0]))]
@@ -85,6 +92,7 @@ def plot_reward_figs():
         if y_lim is not None:
             plt.ylim(y_lim)
         plt.xticks(x, x_labels)
+        plt.yticks(fontproperties=Roman)
         if legend:
             plt.legend(fontsize=indexsize)
         plt.tick_params(labelsize=indexsize)
@@ -94,25 +102,40 @@ def plot_reward_figs():
             plt.xticks(fontsize=fontsize)
         if axis_label[1].strip() != '':
             plt.ylabel(axis_label[1], fontsize=fontsize)
+        plt.tight_layout()
+        plt.savefig(fig_path + '/' + name, dpi=600, format='svg')
 
     # proposed reward
-    proposed_dict_s, proposed_dict = {'mappo': df_smooth['mappo']}, {'mappo': df_origin['mappo']}
-    plot_df(proposed_dict_s, proposed_dict, is_smooth=[True, True], axis_label=['Episodes', 'Rewards ($)'],
-            legend=False)
+    proposed_dict_s, proposed_dict = {'mappo': df_smooth['本文方法']}, {'mappo': df_origin['本文方法']}
+    plot_df(proposed_dict_s, proposed_dict,
+            is_smooth=[True, True],
+            axis_label=['迭代次数', '奖励值$\mathrm{(\$)}$'],
+            legend=False,
+            fig_path=figs_path,
+            name='reward.svg')
 
     # proposed electricity cost
     proposed_ele_cost_s = {}
     proposed_ele_cost = {}
     for index, home in enumerate('ABCDE'):
-        proposed_ele_cost_s['home_' + home] = -proposed_dict_s['mappo'][:, index + 1, np.newaxis]
-        proposed_ele_cost['home_' + home] = -proposed_dict['mappo'][:, index + 1, np.newaxis]
-    proposed_ele_cost_s['penalty'] = -proposed_dict_s['mappo'][:, 6, np.newaxis]
-    proposed_ele_cost['penalty'] = -proposed_dict['mappo'][:, 6, np.newaxis]
-    plot_df(proposed_ele_cost_s, proposed_ele_cost, axis_label=['Episodes', 'Cost and penalty ($)'],
-            is_smooth=[True, True], legend=True)
+        proposed_ele_cost_s['住宅_' + home] = -proposed_dict_s['mappo'][:, index + 1, np.newaxis]
+        proposed_ele_cost['住宅_' + home] = -proposed_dict['mappo'][:, index + 1, np.newaxis]
+    proposed_ele_cost_s['惩罚项'] = -proposed_dict_s['mappo'][:, 6, np.newaxis]
+    proposed_ele_cost['惩罚项'] = -proposed_dict['mappo'][:, 6, np.newaxis]
+    plot_df(proposed_ele_cost_s, proposed_ele_cost,
+            axis_label=['迭代次数', '成本和惩罚项$\mathrm{(\$)}$'],
+            is_smooth=[True, True],
+            legend=True,
+            fig_path=figs_path,
+            name='energyCostDis.svg')
 
     # comparison rewards
-    plot_df(df_smooth, df_origin, is_smooth=[True, True], axis_label=['Episodes', 'Rewards ($)'], legend=True)
+    plot_df(df_smooth, df_origin,
+            is_smooth=[True, True],
+            axis_label=['迭代次数', '奖励值$\mathrm{(\$)}$'],
+            legend=True,
+            fig_path=figs_path,
+            name='compRewards.svg')
 
     # last reward values
     last_reward_df = {}
@@ -122,12 +145,14 @@ def plot_reward_figs():
         p_lim = -last_rewards[-2, 0]
         last_reward_df[key] = [ele_cost, p_lim]
     plot_bar(last_reward_df,
-             axis_label=['', 'Cost and penalty ($)'],
+             axis_label=['', '成本和惩罚项$\mathrm{(\$)}$'],
              legend=True,
-             x_labels=['ele_cost', 'p_lim'],
+             x_labels=['用能成本', '功率限制惩罚项'],
              y_lim=[0, 90],
              width=0.125,
-             space=0.25)
+             space=0.25,
+             fig_path=figs_path,
+             name='compCosts.svg')
     plt.show()
 
 
@@ -303,16 +328,32 @@ def get_beat_result(train_logs_dirs):
 
 
 if __name__ == '__main__':
+    Roman = 'Times New Roman'
+    Song = 'SimSun'
+    config = {
+        # "font.family": 'serif',  # 衬线字体
+        # "font.size": 12,  # 相当于小四大小
+        # "font.serif": ['SimSun'],  # 宋体
+        "mathtext.fontset": 'stix',  # matplotlib渲染数学字体时使用的字体，和Times New Roman差别不大
+        # 'axes.unicode_minus': False  # 处理负号，即-号
+    }
+    rcParams.update(config)
+
+    rcParams['font.sans-serif'] = ['SimSun']
+    rcParams['axes.unicode_minus'] = False
+    figs_path = './figs'
+    if not os.path.exists(figs_path):
+        os.makedirs(figs_path)
     project_dir = os.path.dirname(os.path.abspath(__file__))
-    logs_dirs = {'mappo': project_dir + r'\train_logs\mappo',
+    logs_dirs = {'本文方法': project_dir + r'\train_logs\mappo',
                  'ippo': project_dir + r'\train_logs\ippo',
                  'maddpg': project_dir + r'\train_logs\maddpg',
-                 'mappo-ls': project_dir + r'\train_logs\mappo_state_limit',
+                 '本文方法-ls': project_dir + r'\train_logs\mappo_state_limit',
                  'ippo-ls': project_dir + r'\train_logs\ippo_state_limit',
                  'maddpg-ls': project_dir + r'\train_logs\maddpg_state_limit'
                  }
-    fontsize = 16
-    indexsize = 14
+    fontsize = 18
+    indexsize = 16
     linewidth_1 = 2
     linewidth_2 = 2
     ep = 5000
@@ -321,6 +362,6 @@ if __name__ == '__main__':
     colors = {'mappo': 'red', 'ippo': 'blue', 'maddpg': 'green'}
 
     # plot figures
-    # plot_reward_figs()
+    plot_reward_figs()
     # plot_load_figs()
-    plot_record_figs()
+    # plot_record_figs()
