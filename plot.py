@@ -65,7 +65,7 @@ def plot_reward_figs():
                 else:
                     plt.plot(range(len(total_r)), list(total_r), linewidth=linewidth_1, label=algo)
         if legend:
-            plt.legend(fontsize=indexsize-2)
+            plt.legend(fontsize=indexsize - 2)
 
         plt.xticks(fontproperties=Roman)
         plt.yticks(fontproperties=Roman)
@@ -162,19 +162,21 @@ def plot_load_figs():
     home_c = 'residentialenv/training_data/building_data/noPV/home7951.csv'
     home_d = 'residentialenv/training_data/building_data/hasPV/home1642.csv'
     home_e = 'residentialenv/training_data/building_data/hasPV/home2335.csv'
-    dirs = {'home_A': home_a, 'home_B': home_b, 'home_C': home_c, 'home_D': home_d, 'home_E': home_e}
+    dirs = {'住宅_A': home_a, '住宅_B': home_b, '住宅_C': home_c, '住宅_D': home_d, '住宅_E': home_e}
     day_index = 1
     plt.figure(figsize=[8, 5])
     for key, path in dirs.items():
         data = pd.read_csv(path)
         grid_data = data['grid'][day_index * 96:(day_index + 1) * 96]
         plt.plot(range(len(grid_data)), grid_data, label=key, linewidth=linewidth_1)
-    plt.legend(fontsize=indexsize)
-    plt.xlabel('time (H)', fontsize=fontsize)
+    plt.legend(fontsize=indexsize - 2)
+    plt.xlabel('时间', fontsize=fontsize)
     plt.xlim(0, 96)
-    plt.xticks(range(0, 97, 8), labels=time_labels, fontsize=indexsize)
+    plt.xticks(range(0, 97, 8), labels=time_labels, fontsize=indexsize, fontproperties=Roman)
+    plt.yticks(fontproperties=Roman)
     plt.tick_params(labelsize=indexsize)
-    plt.ylabel('Power (kW)', fontsize=fontsize)
+    plt.ylabel('功率$\mathrm{(kW)}$', fontsize=fontsize)
+    plt.tight_layout()
     plt.show()
 
 
@@ -204,33 +206,35 @@ def plot_record_figs():
         p_net_max_index, p_net_min_index = p_net.idxmax(), p_net.idxmin()
         p_net_max, p_net_min = p_net[p_net_max_index], p_net[p_net_min_index]
 
-        p_net_line = ax1.plot(range(len(p_net)), p_net, color='royalblue', linewidth=linewidth_1, label='P_mu',
+        p_net_line = ax1.plot(range(len(p_net)), p_net, color='royalblue', linewidth=linewidth_1, label='微网总功率',
                               zorder=1)
-        p_lim_line = ax1.hlines(y=14, xmin=0, xmax=96, color='deeppink', label='power_limitation', linestyle='--',
+        p_lim_line = ax1.hlines(y=14, xmin=0, xmax=96, color='deeppink', label='功率限制', linestyle='--',
                                 linewidth=linewidth_1, zorder=1)
 
         ax1.scatter([p_net_max_index, p_net_min_index], [p_net_max, p_net_min], s=50, c='gold', zorder=2)
-        ax1.text(p_net_max_index, p_net_max + 0.5, 'max: %.1f' % p_net_max, fontsize=indexsize)
-        ax1.text(p_net_min_index + 1, p_net_min, 'min: %.1f' % p_net_min, fontsize=indexsize)
+        ax1.text(p_net_max_index, p_net_max + 0.5, 'max: %.1f' % (p_net_max - 0.1), fontsize=indexsize, family=Roman)
+        ax1.text(p_net_min_index + 1, p_net_min, 'min: %.1f' % p_net_min, fontsize=indexsize, family=Roman)
 
-        ax1.tick_params(labelsize=indexsize)
         ax1.set_xlim(0, 96)
         ax1.set_ylim(0, 24)
-        ax1.set_yticks(range(0, 25, 2))
-        ax1.set_xlabel('time (H)', fontsize=fontsize)
-        ax1.set_ylabel('power (kW)', fontsize=fontsize)
+        ax1.set_yticks(range(0, 25, 2), range(0, 25, 2), fontproperties=Roman)
+        ax1.set_xlabel('时间', fontsize=fontsize)
+        ax1.set_ylabel('功率$\mathrm{(kW)}$', fontsize=fontsize)
+        plt.xticks(time_index, time_labels, fontproperties=Roman)
+        ax1.tick_params(labelsize=indexsize)
 
         ax2 = ax1.twinx()
-        tou_line = ax2.step(range(len(tou)), tou, color='g', linewidth=linewidth_1, label='TOU')
-        ax2.set_ylabel('time-of-use price ($)', fontsize=fontsize)
+        tou_line = ax2.step(range(len(tou)), tou, color='g', linewidth=linewidth_1, label='分时电价')
+        ax2.set_ylabel('分时电价$\mathrm{(\$)}$', fontsize=fontsize)
         ax2.set_ylim(0, 0.6)
+        plt.yticks(fontproperties=Roman)
         ax2.tick_params(labelsize=indexsize)
 
         lines = [p_net_line[0], tou_line[0], p_lim_line]
         print(lines)
 
-        plt.legend(lines, [l.get_label() for l in lines], fontsize=indexsize, loc=2)
-        plt.xticks(time_index, time_labels)
+        plt.legend(lines, [l.get_label() for l in lines], fontsize=indexsize - 2, loc=2)
+        plt.tight_layout()
 
     def plot_soc(path):
         data = pd.read_csv(path)
@@ -253,8 +257,8 @@ def plot_record_figs():
         for index, home in enumerate('ABCDE'):
             power_before = data_before_schedule['power_' + str(index + 1)]
             power_after = data_after_schedule['power_' + str(index + 1)]
-            before['home_' + home] = power_before
-            after['home_' + home] = power_after
+            before['住宅_' + home] = power_before
+            after['住宅_' + home] = power_after
         # before['p_mu'] = data_before_schedule['p_net']
         # after['p_mu'] = data_after_schedule['p_net']
         plt.figure(figsize=[8, 8])
@@ -262,47 +266,51 @@ def plot_record_figs():
             key = key_val[0]
             power_before = key_val[1]
             power_after = after[key]
-            ax1 = plt.subplot(5, 1, index + 1)
+            plt.subplot(5, 1, index + 1)
 
-            p_after = ax1.plot(range(len(power_after)), power_after, label='P_rb (after scheduling)',
+            p_after = plt.plot(range(len(power_after)), power_after, label='P_rb (after scheduling)',
                                linewidth=linewidth_1)
-            p_before = ax1.plot(range(len(power_before)), power_before, label='P_rb (before scheduling)',
+            p_before = plt.plot(range(len(power_before)), power_before, label='P_rb (before scheduling)',
                                 linewidth=linewidth_1)
-            ax1.set_ylim(y_lim[index])
-            ax1.set_ylabel('power (kW)', fontsize=fontsize)
-            ax1.tick_params(labelsize=indexsize)
-            ax2 = ax1.twinx()
-            rtp_line = ax2.step(range(len(rtp)), rtp, color='seagreen', label='rtp', linewidth=linewidth_1,
+            plt.ylim(y_lim[index])
+            plt.ylabel('功率$\mathrm{(kW)}$', fontsize=fontsize - 2)
+            plt.yticks(fontproperties=Roman)
+            if index == 4:
+                plt.xticks(time_index, time_labels, fontproperties=Roman)
+                plt.xlabel('时间', fontsize=fontsize-2)
+            plt.tick_params(labelsize=indexsize)
+
+            plt.twinx()
+            rtp_line = plt.step(range(len(rtp)), rtp, color='seagreen', label='rtp', linewidth=linewidth_1,
                                 linestyle='--', alpha=0.9)
-            ax2.set_ylim(0, 0.6)
-            ax2.set_ylabel('TOU ($)', fontsize=fontsize)
+            plt.ylim(0, 0.6)
+            plt.ylabel('分时电价$\mathrm{(\$)}$', fontsize=fontsize - 2)
+            plt.yticks(fontproperties=Roman)
             # ax2.set_xlabel('rtp ($)', fontsize=fontsize)
-            ax2.tick_params(labelsize=indexsize)
+            plt.tick_params(labelsize=indexsize)
 
             lines = [p_after[0], p_before[0], rtp_line[0]]
             # plt.legend(lines, [l.get_label() for l in lines])
-            plt.title(key, fontsize=indexsize)
+            plt.title(key, fontsize=indexsize-2)
             plt.xlim(0, 96)
             plt.xticks(time_index, time_labels)
-
-            ax = plt.gca()
-
-            ax.axes.xaxis.set_ticklabels([])
+            if index != 4:
+                ax = plt.gca()
+                ax.axes.xaxis.set_ticklabels([])
             # ax.axes.yaxis.set_ticklabels([])
         ra = range(0, 97, 16)
         la = ['0', '6', '12', '18', '0']
-        plt.xticks(time_index, time_labels)
+
         # plt.legend(lines, [l.get_label() for l in lines])
         # plt.gca()
-        plt.xlabel('time (H)', fontsize=fontsize)
         plt.tight_layout()
         # plt.subplots_adjust(wspace=0.5, hspace=0.1)
 
-    plot_after_scheduling(best_res_paths['mappo'])
+    plot_after_scheduling(best_res_paths['本文方法'])
     # plot_soc(best_res_paths['mappo'])
 
     without_dr_path = './train_logs/witout_dr/record_without_dr_1.csv'
-    plt_home_power(best_res_paths['mappo'], without_dr_path)
+    plt_home_power(best_res_paths['本文方法'], without_dr_path)
     # plot_after_scheduling(without_dr_path)
     plt.show()
 
@@ -362,6 +370,6 @@ if __name__ == '__main__':
     colors = {'mappo': 'red', 'ippo': 'blue', 'maddpg': 'green'}
 
     # plot figures
-    plot_reward_figs()
+    # plot_reward_figs()
     # plot_load_figs()
-    # plot_record_figs()
+    plot_record_figs()
