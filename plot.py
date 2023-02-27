@@ -38,13 +38,14 @@ def get_mean_reward(paths, smooth_range):
             mean_r.append(data_np)
         mean_rewards = np.stack(mean_r, axis=-1)
         mean_r_value = np.mean(mean_rewards, axis=-1)
-        mean_r_value[:, 0, 0] = mean_r_value[:, 0, 0] - mean_r_value[:, -1, 0]
+        mean_r_value[:, 0, 0] = np.sum(mean_r_value[:, 1:-1, 0], axis=1)
         df[algo] = mean_r_value
     return df
 
 
 def plot_reward_figs():
     file_paths = get_files_paths(logs_dirs, 'r_(.*){}\.csv'.format(ep))
+    file_paths['本文方法'] = file_paths['本文方法'][:3]
     df_smooth = get_mean_reward(file_paths, 31)
     df_origin = get_mean_reward(file_paths, 0)
 
@@ -71,6 +72,7 @@ def plot_reward_figs():
         plt.yticks(fontproperties=Roman)
         plt.tick_params(labelsize=indexsize)
         plt.xlim(0, 5000)
+        # plt.ylim(-110,-60)
         plt.ylabel(axis_label[1], fontsize=fontsize)
         plt.xlabel(axis_label[0], fontsize=fontsize)
         plt.tight_layout()
@@ -103,7 +105,7 @@ def plot_reward_figs():
         if axis_label[1].strip() != '':
             plt.ylabel(axis_label[1], fontsize=fontsize)
         plt.tight_layout()
-        plt.savefig(fig_path + '/' + name, dpi=600, format='svg')
+        # plt.savefig(fig_path + '/' + name, dpi=600, format='svg')
 
     # proposed reward
     proposed_dict_s, proposed_dict = {'mappo': df_smooth['本文方法']}, {'mappo': df_origin['本文方法']}
@@ -117,11 +119,15 @@ def plot_reward_figs():
     # proposed electricity cost
     proposed_ele_cost_s = {}
     proposed_ele_cost = {}
+    count = []
     for index, home in enumerate('ABCDE'):
         proposed_ele_cost_s['住宅_' + home] = -proposed_dict_s['mappo'][:, index + 1, np.newaxis]
         proposed_ele_cost['住宅_' + home] = -proposed_dict['mappo'][:, index + 1, np.newaxis]
+        count.append(proposed_ele_cost_s['住宅_' + home][-1])
     proposed_ele_cost_s['惩罚项'] = -proposed_dict_s['mappo'][:, 6, np.newaxis]
+    count.append(proposed_ele_cost_s['惩罚项'][-1])
     proposed_ele_cost['惩罚项'] = -proposed_dict['mappo'][:, 6, np.newaxis]
+    print(df_smooth['本文方法'][-1],count)
     plot_df(proposed_ele_cost_s, proposed_ele_cost,
             axis_label=['迭代次数', '成本和惩罚项$\mathrm{(\$)}$'],
             is_smooth=[True, True],
@@ -195,6 +201,7 @@ def get_files_paths(train_logs_dirs, patten):
 
 def plot_record_figs():
     best_res_paths = get_beat_result(logs_dirs)
+    print(best_res_paths)
 
     def plot_after_scheduling(path):
         data = pd.read_csv(path)
@@ -277,7 +284,7 @@ def plot_record_figs():
             plt.yticks(fontproperties=Roman)
             if index == 4:
                 plt.xticks(time_index, time_labels, fontproperties=Roman)
-                plt.xlabel('时间', fontsize=fontsize-2)
+                plt.xlabel('时间', fontsize=fontsize - 2)
             plt.tick_params(labelsize=indexsize)
 
             plt.twinx()
@@ -291,7 +298,7 @@ def plot_record_figs():
 
             lines = [p_after[0], p_before[0], rtp_line[0]]
             # plt.legend(lines, [l.get_label() for l in lines])
-            plt.title(key, fontsize=indexsize-2)
+            plt.title(key, fontsize=indexsize - 2)
             plt.xlim(0, 96)
             plt.xticks(time_index, time_labels)
             if index != 4:
@@ -370,6 +377,6 @@ if __name__ == '__main__':
     colors = {'mappo': 'red', 'ippo': 'blue', 'maddpg': 'green'}
 
     # plot figures
-    # plot_reward_figs()
+    plot_reward_figs()
     # plot_load_figs()
-    plot_record_figs()
+    # plot_record_figs()
