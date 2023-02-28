@@ -1,0 +1,3 @@
+[submodule "p2p_trading_env"]
+	path = p2p_trading_env
+	url = https://github.com/wgxHihihi/p2p_trading_env.git

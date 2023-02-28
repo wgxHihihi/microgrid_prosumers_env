@@ -66,7 +66,7 @@ def plot_reward_figs():
                 else:
                     plt.plot(range(len(total_r)), list(total_r), linewidth=linewidth_1, label=algo)
         if legend:
-            plt.legend(fontsize=indexsize - 2)
+            plt.legend(fontsize=indexsize - 2,loc=4)
 
         plt.xticks(fontproperties=Roman)
         plt.yticks(fontproperties=Roman)
@@ -107,33 +107,33 @@ def plot_reward_figs():
         plt.tight_layout()
         # plt.savefig(fig_path + '/' + name, dpi=600, format='svg')
 
-    # proposed reward
-    proposed_dict_s, proposed_dict = {'mappo': df_smooth['本文方法']}, {'mappo': df_origin['本文方法']}
-    plot_df(proposed_dict_s, proposed_dict,
-            is_smooth=[True, True],
-            axis_label=['迭代次数', '奖励值$\mathrm{(\$)}$'],
-            legend=False,
-            fig_path=figs_path,
-            name='reward.svg')
-
-    # proposed electricity cost
-    proposed_ele_cost_s = {}
-    proposed_ele_cost = {}
-    count = []
-    for index, home in enumerate('ABCDE'):
-        proposed_ele_cost_s['住宅_' + home] = -proposed_dict_s['mappo'][:, index + 1, np.newaxis]
-        proposed_ele_cost['住宅_' + home] = -proposed_dict['mappo'][:, index + 1, np.newaxis]
-        count.append(proposed_ele_cost_s['住宅_' + home][-1])
-    proposed_ele_cost_s['惩罚项'] = -proposed_dict_s['mappo'][:, 6, np.newaxis]
-    count.append(proposed_ele_cost_s['惩罚项'][-1])
-    proposed_ele_cost['惩罚项'] = -proposed_dict['mappo'][:, 6, np.newaxis]
-    print(df_smooth['本文方法'][-1],count)
-    plot_df(proposed_ele_cost_s, proposed_ele_cost,
-            axis_label=['迭代次数', '成本和惩罚项$\mathrm{(\$)}$'],
-            is_smooth=[True, True],
-            legend=True,
-            fig_path=figs_path,
-            name='energyCostDis.svg')
+    # # proposed reward
+    # proposed_dict_s, proposed_dict = {'mappo': df_smooth['本文方法']}, {'mappo': df_origin['本文方法']}
+    # plot_df(proposed_dict_s, proposed_dict,
+    #         is_smooth=[True, True],
+    #         axis_label=['迭代次数', '奖励值$\mathrm{(\$)}$'],
+    #         legend=False,
+    #         fig_path=figs_path,
+    #         name='reward.svg')
+    #
+    # # proposed electricity cost
+    # proposed_ele_cost_s = {}
+    # proposed_ele_cost = {}
+    # count = []
+    # for index, home in enumerate('ABCDE'):
+    #     proposed_ele_cost_s['住宅_' + home] = -proposed_dict_s['mappo'][:, index + 1, np.newaxis]
+    #     proposed_ele_cost['住宅_' + home] = -proposed_dict['mappo'][:, index + 1, np.newaxis]
+    #     count.append(proposed_ele_cost_s['住宅_' + home][-1])
+    # proposed_ele_cost_s['惩罚项'] = -proposed_dict_s['mappo'][:, 6, np.newaxis]
+    # count.append(proposed_ele_cost_s['惩罚项'][-1])
+    # proposed_ele_cost['惩罚项'] = -proposed_dict['mappo'][:, 6, np.newaxis]
+    # print(df_smooth['本文方法'][-1],count)
+    # plot_df(proposed_ele_cost_s, proposed_ele_cost,
+    #         axis_label=['迭代次数', '成本和惩罚项$\mathrm{(\$)}$'],
+    #         is_smooth=[True, True],
+    #         legend=True,
+    #         fig_path=figs_path,
+    #         name='energyCostDis.svg')
 
     # comparison rewards
     plot_df(df_smooth, df_origin,
@@ -144,21 +144,21 @@ def plot_reward_figs():
             name='compRewards.svg')
 
     # last reward values
-    last_reward_df = {}
-    for key, vals in df_origin.items():
-        last_rewards = df_origin[key][-1]
-        ele_cost = -last_rewards[1:-2, 0].sum()
-        p_lim = -last_rewards[-2, 0]
-        last_reward_df[key] = [ele_cost, p_lim]
-    plot_bar(last_reward_df,
-             axis_label=['', '成本和惩罚项$\mathrm{(\$)}$'],
-             legend=True,
-             x_labels=['用能成本', '功率限制惩罚项'],
-             y_lim=[0, 90],
-             width=0.125,
-             space=0.25,
-             fig_path=figs_path,
-             name='compCosts.svg')
+    # last_reward_df = {}
+    # for key, vals in df_origin.items():
+    #     last_rewards = df_origin[key][-1]
+    #     ele_cost = -last_rewards[1:-2, 0].sum()
+    #     p_lim = -last_rewards[-2, 0]
+    #     last_reward_df[key] = [ele_cost, p_lim]
+    # plot_bar(last_reward_df,
+    #          axis_label=['', '成本和惩罚项$\mathrm{(\$)}$'],
+    #          legend=True,
+    #          x_labels=['用能成本', '功率限制惩罚项'],
+    #          y_lim=[0, 90],
+    #          width=0.125,
+    #          space=0.25,
+    #          fig_path=figs_path,
+    #          name='compCosts.svg')
     plt.show()
 
 
