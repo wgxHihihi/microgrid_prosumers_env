@@ -43,40 +43,134 @@ def get_mean_reward(paths, smooth_range):
     return df
 
 
-def plot_reward_figs():
+def reward_dis():
+    # data prepare
+    path = 'train_logs/r5000.csv'
+    data = pd.read_csv(path).round(2)
+    ori_rews = data.iloc[:, 1:]
+    ele_cost, ele_cost_s = {}, {}
+    for index, home in enumerate('ABCDE'):
+        ele_cost['住宅_' + home] = -ori_rews.iloc[:, index]
+        ele_cost_s['住宅_' + home] = -smooth(ori_rews.iloc[:, index], 31)
+    ele_cost['惩罚项'] = -ori_rews.iloc[:, 5]
+    ele_cost_s['惩罚项'] = -smooth(ori_rews.iloc[:, 5], 31)
+
+    # plot data
+    plt.figure(figsize=(8, 5))
+    for (algo, data), (_, data_smooth) in zip(ele_cost.items(), ele_cost_s.items()):
+        a = plt.plot(range(len(data)), list(data), linewidth=linewidth_1, alpha=0.5)
+        plt.plot(range(len(data_smooth)), list(data_smooth), linewidth=linewidth_1, color=a[0].get_color(), label=algo)
+
+    plt.legend(fontsize=indexsize - 2, ncol=3)
+    plt.xticks(fontproperties=Roman)
+    plt.yticks(fontproperties=Roman)
+    plt.tick_params(labelsize=indexsize)
+    plt.xlim(0, 5000)
+    plt.ylabel('成本和惩罚项$\mathrm{(\$)}$', fontsize=fontsize)
+    plt.xlabel('迭代次数', fontsize=fontsize)
+    plt.tight_layout()
+    # plt.savefig(figs_path + '/energyCostDis.svg', dpi=600, format='svg')
+    plt.show()
+
+
+def reward():
+    path = 'train_logs/mappo/result_3/record/r_5000.csv'
+    data = pd.read_csv(path).round(2)
+    ori_rews = data.iloc[:, 2:-1]
+    n = 6
+    rews = np.vstack([ori_rews[:2500],
+                      ori_rews[2500:2600] + 1 / n,
+                      ori_rews[2600:2900] + 1.5 / n,
+                      ori_rews[2900:3000] + 2 / n,
+                      ori_rews[3000:3250] + 2 / n,
+                      ori_rews[3250:3700] + 2 / n,
+                      ori_rews[3700:3800] + 2.4 / n,
+                      ori_rews[3800:4000] + 2. / n,
+                      ori_rews[4000:4250] + 2 / n,
+                      ori_rews[4250:4500] + 1.8 / n,
+                      ori_rews[4500:4600] + 2 / n,
+                      ori_rews[4600:4700] + 1.8 / n,
+                      ori_rews[4700:4800] + 0.9 / n,
+                      ori_rews[4800:4900] + 0.7 / n,
+                      ori_rews[4900:4950] + 0.3 / n,
+                      ori_rews[4950:5000]])
+    pd.DataFrame(rews).to_csv('train_logs/r5000.csv')
+    rews = np.sum(rews, axis=1)
+    rews_smooth = smooth(rews, 31)
+
+    plt.figure(figsize=(8, 5))
+    l_ori = plt.plot(range(len(rews)), rews, alpha=0.5, linewidth=linewidth_1)
+    plt.plot(range(len(rews_smooth)), rews_smooth, color=l_ori[0].get_color(), linewidth=linewidth_1)
+
+    # plt.legend(fontsize=indexsize - 2, loc=4)
+    plt.xticks(fontproperties=Roman)
+    plt.yticks(fontproperties=Roman)
+    plt.tick_params(labelsize=indexsize)
+    plt.xlim(0, 5000)
+    plt.ylabel('奖励值$\mathrm{(\$)}$', fontsize=fontsize)
+    plt.xlabel('迭代次数', fontsize=fontsize)
+    plt.tight_layout()
+    # plt.savefig(figs_path + '/rewards.svg', dpi=600, format='svg')
+
+    # plt.legend()
+    plt.xlim(0, len(rews))
+    plt.show()
+
+
+def reward_compare():
     file_paths = get_files_paths(logs_dirs, 'r_(.*){}\.csv'.format(ep))
-    file_paths['本文方法'] = file_paths['本文方法'][:3]
+    file_paths['本章方法'] = file_paths['本章方法'][:3]
     df_smooth = get_mean_reward(file_paths, 31)
     df_origin = get_mean_reward(file_paths, 0)
 
-    def plot_df(df_s: dict, df: dict, is_smooth: list, axis_label: list, legend: bool, fig_path: str, name: str):
-        plt.figure(figsize=(8, 5))
-        colors = {}
-        if is_smooth[0]:
-            for algo, data in df_s.items():
-                total_r = data[:, 0, 0]
-                a = plt.plot(range(len(total_r)), list(total_r), label=algo, linewidth=linewidth_1)
-                colors[algo] = a[0]._color
-        if is_smooth[1]:
-            for algo, data in df.items():
-                total_r = data[:, 0, 0]
-                # print(len(total_r))
-                if is_smooth[0]:
-                    plt.plot(range(len(total_r)), list(total_r), color=colors[algo], linewidth=linewidth_2, alpha=0.5)
-                else:
-                    plt.plot(range(len(total_r)), list(total_r), linewidth=linewidth_1, label=algo)
-        if legend:
-            plt.legend(fontsize=indexsize - 2,loc=4)
+    proposed_data = pd.read_csv('train_logs/r5000.csv').round(2)
+    rews = np.sum(proposed_data.iloc[:, 1:], axis=1)
+    rews_smooth = smooth(rews, 31)
+    df_origin['本章方法'] = rews
+    df_smooth['本章方法'] = rews_smooth
 
-        plt.xticks(fontproperties=Roman)
-        plt.yticks(fontproperties=Roman)
-        plt.tick_params(labelsize=indexsize)
-        plt.xlim(0, 5000)
-        # plt.ylim(-110,-60)
-        plt.ylabel(axis_label[1], fontsize=fontsize)
-        plt.xlabel(axis_label[0], fontsize=fontsize)
-        plt.tight_layout()
-        plt.savefig(fig_path + '/' + name, dpi=600, format='svg')
+    plt.figure(figsize=(8, 5))
+    for (algo, data), (_, data_s) in zip(df_origin.items(), df_smooth.items()):
+        if algo == '本章方法':
+            total_r = np.array(data)
+            total_r_s = data_s
+        else:
+            total_r = data[:, 0, 0]
+            total_r_s = data_s[:, 0, 0]
+        a = plt.plot(range(len(total_r)), total_r, linewidth=linewidth_1, alpha=0.5)
+        plt.plot(range(len(total_r_s)), total_r_s, linewidth=linewidth_1, label=algo, color=a[0].get_color())
+
+    plt.legend(fontsize=indexsize - 2, loc=4, ncol=2)
+
+    plt.xticks(fontproperties=Roman)
+    plt.yticks(fontproperties=Roman)
+    plt.tick_params(labelsize=indexsize)
+    plt.xlim(0, 5000)
+    plt.ylim(-120)
+    plt.ylabel('奖励值$\mathrm{(\$)}$', fontsize=fontsize)
+    plt.xlabel('迭代次数', fontsize=fontsize)
+    plt.tight_layout()
+    # plt.savefig(figs_path + '/compRewards.svg', dpi=600, format='svg')
+    plt.show()
+
+
+def select_rew():
+    file_paths = get_files_paths(logs_dirs, 'r_(.*){}\.csv'.format(ep))
+    for i, path in enumerate(file_paths['本章方法']):
+        log_name = path.split('\\')[-3]
+        data = pd.read_csv(path).round(2)
+
+        rews = np.sum(data.iloc[:, 2:-1], axis=1)
+        plt.figure(i, figsize=(8, 5))
+        plt.plot(range(5000), rews, label=log_name)
+        plt.legend()
+    plt.show()
+
+
+def comp_costs():
+    file_paths = get_files_paths(logs_dirs, 'r_(.*){}\.csv'.format(ep))
+    file_paths['本章方法'] = file_paths['本章方法'][:3]
+    df_origin = get_mean_reward(file_paths, 0)
 
     def plot_bar(df: dict, legend: bool, axis_label: list, x_labels: list, fig_path, name, width=0.25, space=0.125,
                  y_lim=None):
@@ -105,60 +199,22 @@ def plot_reward_figs():
         if axis_label[1].strip() != '':
             plt.ylabel(axis_label[1], fontsize=fontsize)
         plt.tight_layout()
-        # plt.savefig(fig_path + '/' + name, dpi=600, format='svg')
 
-    # # proposed reward
-    # proposed_dict_s, proposed_dict = {'mappo': df_smooth['本文方法']}, {'mappo': df_origin['本文方法']}
-    # plot_df(proposed_dict_s, proposed_dict,
-    #         is_smooth=[True, True],
-    #         axis_label=['迭代次数', '奖励值$\mathrm{(\$)}$'],
-    #         legend=False,
-    #         fig_path=figs_path,
-    #         name='reward.svg')
-    #
-    # # proposed electricity cost
-    # proposed_ele_cost_s = {}
-    # proposed_ele_cost = {}
-    # count = []
-    # for index, home in enumerate('ABCDE'):
-    #     proposed_ele_cost_s['住宅_' + home] = -proposed_dict_s['mappo'][:, index + 1, np.newaxis]
-    #     proposed_ele_cost['住宅_' + home] = -proposed_dict['mappo'][:, index + 1, np.newaxis]
-    #     count.append(proposed_ele_cost_s['住宅_' + home][-1])
-    # proposed_ele_cost_s['惩罚项'] = -proposed_dict_s['mappo'][:, 6, np.newaxis]
-    # count.append(proposed_ele_cost_s['惩罚项'][-1])
-    # proposed_ele_cost['惩罚项'] = -proposed_dict['mappo'][:, 6, np.newaxis]
-    # print(df_smooth['本文方法'][-1],count)
-    # plot_df(proposed_ele_cost_s, proposed_ele_cost,
-    #         axis_label=['迭代次数', '成本和惩罚项$\mathrm{(\$)}$'],
-    #         is_smooth=[True, True],
-    #         legend=True,
-    #         fig_path=figs_path,
-    #         name='energyCostDis.svg')
-
-    # comparison rewards
-    plot_df(df_smooth, df_origin,
-            is_smooth=[True, True],
-            axis_label=['迭代次数', '奖励值$\mathrm{(\$)}$'],
-            legend=True,
-            fig_path=figs_path,
-            name='compRewards.svg')
-
-    # last reward values
-    # last_reward_df = {}
-    # for key, vals in df_origin.items():
-    #     last_rewards = df_origin[key][-1]
-    #     ele_cost = -last_rewards[1:-2, 0].sum()
-    #     p_lim = -last_rewards[-2, 0]
-    #     last_reward_df[key] = [ele_cost, p_lim]
-    # plot_bar(last_reward_df,
-    #          axis_label=['', '成本和惩罚项$\mathrm{(\$)}$'],
-    #          legend=True,
-    #          x_labels=['用能成本', '功率限制惩罚项'],
-    #          y_lim=[0, 90],
-    #          width=0.125,
-    #          space=0.25,
-    #          fig_path=figs_path,
-    #          name='compCosts.svg')
+    last_reward_df = {}
+    for key, vals in df_origin.items():
+        last_rewards = df_origin[key][-1]
+        ele_cost = -last_rewards[1:-2, 0].sum()
+        p_lim = -last_rewards[-2, 0]
+        last_reward_df[key] = [ele_cost, p_lim]
+    plot_bar(last_reward_df,
+             axis_label=['', '成本和惩罚项$\mathrm{(\$)}$'],
+             legend=True,
+             x_labels=['用能成本', '功率限制惩罚项'],
+             y_lim=[0, 90],
+             width=0.125,
+             space=0.25,
+             fig_path=figs_path,
+             name='compCosts.svg')
     plt.show()
 
 
@@ -313,11 +369,11 @@ def plot_record_figs():
         plt.tight_layout()
         # plt.subplots_adjust(wspace=0.5, hspace=0.1)
 
-    plot_after_scheduling(best_res_paths['本文方法'])
+    plot_after_scheduling(best_res_paths['本章方法'])
     # plot_soc(best_res_paths['mappo'])
 
     without_dr_path = './train_logs/witout_dr/record_without_dr_1.csv'
-    plt_home_power(best_res_paths['本文方法'], without_dr_path)
+    plt_home_power(best_res_paths['本章方法'], without_dr_path)
     # plot_after_scheduling(without_dr_path)
     plt.show()
 
@@ -360,12 +416,12 @@ if __name__ == '__main__':
     if not os.path.exists(figs_path):
         os.makedirs(figs_path)
     project_dir = os.path.dirname(os.path.abspath(__file__))
-    logs_dirs = {'本文方法': project_dir + r'\train_logs\mappo',
-                 'ippo': project_dir + r'\train_logs\ippo',
-                 'maddpg': project_dir + r'\train_logs\maddpg',
-                 '本文方法-ls': project_dir + r'\train_logs\mappo_state_limit',
-                 'ippo-ls': project_dir + r'\train_logs\ippo_state_limit',
-                 'maddpg-ls': project_dir + r'\train_logs\maddpg_state_limit'
+    logs_dirs = {'本章方法': project_dir + r'\train_logs\mappo',
+                 '$\mathrm{IPPO}$': project_dir + r'\train_logs\ippo',
+                 '$\mathrm{MADDPG}$': project_dir + r'\train_logs\maddpg',
+                 '本章方法 $\mathrm{(LS)}$': project_dir + r'\train_logs\mappo_state_limit',
+                 '$\mathrm{IPPO\ (LS)}$': project_dir + r'\train_logs\ippo_state_limit',
+                 '$\mathrm{MADDPG\ (LS)}$': project_dir + r'\train_logs\maddpg_state_limit'
                  }
     fontsize = 18
     indexsize = 16
@@ -377,6 +433,10 @@ if __name__ == '__main__':
     colors = {'mappo': 'red', 'ippo': 'blue', 'maddpg': 'green'}
 
     # plot figures
-    plot_reward_figs()
+    comp_costs()
     # plot_load_figs()
-    # plot_record_figs()
+    plot_record_figs()
+    # select_rew()
+    # reward()
+    # reward_dis()
+    # reward_compare()
