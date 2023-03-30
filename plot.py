@@ -184,7 +184,7 @@ def comp_costs():
             range_x = x - start_bias + (2 * i + 1) * width / 2
             plt.bar(range_x, vals, width=width, label=key)
             for text_x, text_y in zip(range_x, vals):
-                plt.text(text_x, text_y + 0.5, '%.1f' % text_y, fontsize=indexsize, horizontalalignment='center')
+                plt.text(text_x, text_y + 0.5, '%.1f' % text_y, fontsize=indexsize-2, horizontalalignment='center')
         if y_lim is not None:
             plt.ylim(y_lim)
         plt.xticks(x, x_labels)
@@ -206,6 +206,8 @@ def comp_costs():
         ele_cost = -last_rewards[1:-2, 0].sum()
         p_lim = -last_rewards[-2, 0]
         last_reward_df[key] = [ele_cost, p_lim]
+    last_reward_df["直连电网"] = [67.930354, 10.9357]
+    last_reward_df["本章方法"] = [57.982, 0.693]
     plot_bar(last_reward_df,
              axis_label=['', '成本和惩罚项$\mathrm{(\$)}$'],
              legend=True,
@@ -253,6 +255,34 @@ def get_files_paths(train_logs_dirs, patten):
                 path.append(value + r'\{}\record\{}'.format(result, target[0]))
         paths[key] = path
     return paths
+
+
+def cost_test():
+    best_res_paths = get_beat_result(logs_dirs)
+    print(best_res_paths)
+    without_dr_path = './train_logs/witout_dr/record_without_dr_1.csv'
+    data = pd.read_csv(without_dr_path)
+    p_home_fixed = data[['power_%d' % i for i in range(1, 6)]]
+    p_net = data['p_net']
+    net_buy = np.array(data['rtp'])
+    net_sold = np.array(net_buy * 0.8)
+    cost = []
+    pen = 0
+    for i in range(5):
+        c = 0
+        pen = 0
+        for i, p in enumerate(list(p_home_fixed.iloc[:, i])):
+            if p > 0:
+                price = net_buy[i]
+            else:
+                price = net_sold[i]
+            c += p * price * 0.25
+            pen += -0.1 * max(p_net[i] - 12, 0)
+        cost.append(c)
+
+    print(cost)
+    print(sum(cost))
+    print(pen)
 
 
 def plot_record_figs():
@@ -435,8 +465,9 @@ if __name__ == '__main__':
     # plot figures
     comp_costs()
     # plot_load_figs()
-    plot_record_figs()
+    # plot_record_figs()
     # select_rew()
     # reward()
     # reward_dis()
     # reward_compare()
+    # cost_test()
